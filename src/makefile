@@ -10,14 +10,14 @@ NASMFLAGS = -felf32
 kaios.iso:kaios.bin
 	grub-mkrescue -o kaios.iso root
 
-kaios.bin: $(OBJS) makefile
+kaios.bin: $(OBJS) makefile linker.ld
 	$(CC)  $(BINFLAGS) -o kaios.bin $(OBJS)
 	@cp -f kaios.bin root/boot/
 
-%.o:%.c makefile
+%.o:%.c makefile linker.ld
 	$(CC) $(OBJFLAGS) $*.c
 
-%.o:%.asm makefile
+%.o:%.asm makefile linker.ld
 	$(NASM) $(NASMFLAGS) -o $*.o $*.asm 
 
 .PHONY:run clean

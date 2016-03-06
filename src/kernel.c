@@ -30,6 +30,7 @@ int strlen(char* str);
 void tty_init();
 uint8_t make_color(enum Vgacolor fg, enum Vgacolor bg);
 uint16_t tty_retchar(char c, uint8_t color);
+void tty_up_row();
 
 const size_t VGAHEAD = 0xB8000;
 const size_t VGAWIDTH = 80;
@@ -42,7 +43,8 @@ uint16_t* tty_buffer;
 
 void KaiOS_main() {
     tty_init();
-    printf("Hello World!");
+    printf("Hello World\n");
+    printf("Kaiming\n");
 }
 
 void tty_init() {
@@ -59,12 +61,22 @@ void tty_init() {
 
 void printf(char* str) {
     size_t len = strlen(str);
-    for(size_t i = 0;i < len;i++){
+    for(size_t i = 0; i < len; i++) {
         size_t pos = tty_row * VGAWIDTH + tty_column;
-        tty_buffer[pos] = tty_retchar(str[i],tty_default_color);
-        tty_column = (tty_column + 1) % VGAWIDTH;
-        if(!tty_column)
+
+        if(str[i] == '\n') {
+            tty_column = 0;
             tty_row++;
+        } else {
+            tty_buffer[pos] = tty_retchar(str[i],tty_default_color);
+            tty_column = (tty_column + 1) % VGAWIDTH;
+            if(tty_column == 0)
+                tty_row++;
+        }
+        if(tty_row == VGAHEIGHT) {
+            tty_up_row();
+            tty_row--;
+        }
     }
 }
 
@@ -76,12 +88,25 @@ int strlen(char* str) {
     if(str == NULL)
         return 0;
 
-    int cnt = 0;
+    size_t cnt = 0;
     while(str[cnt]) cnt++;
     return cnt;
 }
 
-uint16_t tty_retchar(char c, uint8_t color){
+uint16_t tty_retchar(char c, uint8_t color) {
     return color << 8 | c;
 }
 
+void tty_up_row(){
+    for(size_t i=1;i<VGAHEIGHT;i++)
+        for(size_t j=0;j<VGAWIDTH;j++){
+            size_t pos = i * VGAWIDTH + j;
+            size_t rep = (i-1) * VGAWIDTH + j;
+            tty_buffer[rep] = tty_buffer[pos];
+        }
+    for(size_t j=0;j<VGAWIDTH;j++){
+        size_t pos = (VGAHEIGHT - 1) * VGAWIDTH + j;
+        tty_buffer[pos] = tty_retchar(' ',tty_default_color);
+    }
+
+}
