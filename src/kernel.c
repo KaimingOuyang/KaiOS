@@ -43,10 +43,8 @@ uint16_t* tty_buffer;
 
 void KaiOS_main() {
     tty_init();
-    float f = 100.0F;
-    for(int i=0;i<1000;i++)
-        printf("Hello World!");
-    printf("wokao\n");
+    printf("Hello World\n");
+    printf("Kaiming\n");
 }
 
 void tty_init() {
@@ -90,7 +88,7 @@ int strlen(char* str) {
     if(str == NULL)
         return 0;
 
-    int cnt = 0;
+    size_t cnt = 0;
     while(str[cnt]) cnt++;
     return cnt;
 }
@@ -100,13 +98,13 @@ uint16_t tty_retchar(char c, uint8_t color) {
 }
 
 void tty_up_row(){
-    for(int i=1;i<VGAHEIGHT;i++)
-        for(int j=0;j<VGAWIDTH;j++){
+    for(size_t i=1;i<VGAHEIGHT;i++)
+        for(size_t j=0;j<VGAWIDTH;j++){
             size_t pos = i * VGAWIDTH + j;
             size_t rep = (i-1) * VGAWIDTH + j;
             tty_buffer[rep] = tty_buffer[pos];
         }
-    for(int j=0;j<VGAWIDTH;j++){
+    for(size_t j=0;j<VGAWIDTH;j++){
         size_t pos = (VGAHEIGHT - 1) * VGAWIDTH + j;
         tty_buffer[pos] = tty_retchar(' ',tty_default_color);
     }

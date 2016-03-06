@@ -12,7 +12,7 @@ align 4
 	dd CHECKSUM
 
 
-section .bootstrap_stack, nobits
+section .bootstrap_stack
 align 4
 stack_bottom:
 resb 16384
