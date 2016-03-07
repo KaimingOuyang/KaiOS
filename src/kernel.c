@@ -45,6 +45,7 @@ void KaiOS_main() {
     tty_init();
     printf("Hello World\n");
     printf("Kaiming\n");
+    while(1);
 }
 
 void tty_init() {
