@@ -1,24 +1,27 @@
 # KaiOS makefile
 CC = i686-elf-gcc
-OBJS = kernel.o boot.o
+OBJS = gdt_idt.o kernel.o string.o tty.o boot.o asmfunc.o
 BINFLAGS = -T linker.ld -std=gnu99 -O2 -ffreestanding -nostdlib -lgcc
-OBJFLAGS = -c -ffreestanding -O2 -Wall -Wextra -std=gnu99 
+OBJFLAGS = -c -ffreestanding -O2 -Wall -Wextra -std=gnu99 -I .
 NASM = nasm
 NASMFLAGS = -felf32
-
+COMFILE = makefile linker.ld
 
 kaios.iso:kaios.bin
 	grub-mkrescue -o kaios.iso root
 
-kaios.bin: $(OBJS) makefile linker.ld
+kaios.bin: $(OBJS) $(COMFILE)
 	$(CC)  $(BINFLAGS) -o kaios.bin $(OBJS)
 	@cp -f kaios.bin root/boot/
 
-%.o:%.c makefile linker.ld
+%.o:%.c %.h $(COMFILE)
 	$(CC) $(OBJFLAGS) $*.c
 
-%.o:%.asm makefile linker.ld
-	$(NASM) $(NASMFLAGS) -o $*.o $*.asm 
+%.o:%.asm %.h $(COMFILE)
+	$(NASM) $(NASMFLAGS) -o $*.o $*.asm
+
+boot.o:boot.asm $(COMFILE)
+	$(NASM) $(NASMFLAGS) -o $*.o $*.asm
 
 .PHONY:run clean
 
@@ -32,4 +35,4 @@ clean:
 	@rm kaios.iso
 
 
-	
+
