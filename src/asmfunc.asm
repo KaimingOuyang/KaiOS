@@ -1,8 +1,8 @@
 
 section .text
-global _load_gdtr
+global _load_gdtr,_load_idtr
 
-_load_gdtr: ;void _load_gdtr(const uint32_t limit,struct GdtDescriptor* const gdt_addr);
+_load_gdtr: ;void _load_gdtr(const uint32_t GDT_LIMIT,struct GdtDescriptor* const GDT_ADDR);
     mov ax,[esp+4]
     mov [esp+6],ax
     lgdt [esp+6]
@@ -14,4 +14,10 @@ reload_reg:
     mov ss,ax
     mov fs,ax
     mov gs,ax
+    ret
+
+_load_idtr: ;void _load_idtr(const uint32_t IDT_LIMIT,struct IdtDescriptor* const IDT_ADDR);
+    mov ax,[esp+4]
+    mov [esp+6],ax
+    lidt [esp+6]
     ret

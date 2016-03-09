@@ -1,15 +1,29 @@
 #include <gdt_idt.h>
 #include <asmfunc.h>
+#include <memory.h>
 
-const uint32_t gdt_limit = 0xffff;
-struct GdtDescriptor* const gdt = (struct GdtDescriptor* const) 0x3f0000;
-//const * idt = (uint32_t*) 0x3ef800;
+
+const uint32_t GDT_LIMIT = 0xffff;
+const uint32_t IDT_LIMIT = 0x7ff;
+const uint16_t IDT_COUNT = 0xff;
+const uint8_t IDT_AR = 0x8e;
+const uint32_t OS_GDT_DATA_BASE = 0;
+const uint32_t OS_GDT_CODE_BASE = 0;
+const uint32_t OS_GDT_DATA_AR = 0x0492;
+const uint32_t OS_GDT_CODE_AR = 0x049a;
+const uint32_t OS_GDT_DATA_LIMIT = 0xffffffff;
+const uint32_t OS_GDT_CODE_LIMIT = 0xffffffff;
+
+
+
+struct GdtDescriptor* const GDT = (struct GdtDescriptor* const) 0x3f0000;
+struct IdtDescriptor* const IDT = (struct IdtDescriptor* const) 0x3ef800;
 
 void gdt_init() {
-    set_gdt_struct(gdt,0,0,0);
-    set_gdt_struct(gdt+1,0xffffffff,0,0x0492); // os data segment
-    set_gdt_struct(gdt+2,0xffffffff,0,0x049a); // os code segment
-    _load_gdtr(gdt_limit,gdt);
+    set_gdt_struct(GDT,0,0,0);
+    set_gdt_struct(GDT+1,OS_GDT_DATA_LIMIT,OS_GDT_DATA_BASE,OS_GDT_DATA_AR); // os data segment
+    set_gdt_struct(GDT+2,OS_GDT_CODE_LIMIT,OS_GDT_CODE_BASE,OS_GDT_CODE_AR); // os code segment
+    _load_gdtr(GDT_LIMIT,GDT);
     return;
 }
 
@@ -28,4 +42,23 @@ void set_gdt_struct(struct GdtDescriptor* gdt_set,uint32_t limit,uint32_t base,u
         ar |= 1 << 11;
     gdt_set->ar_limit_high |= ar >> 4;
     return;
+}
+
+
+void idt_init(){
+
+    memset(IDT,0,sizeof(IDT));
+    _load_idtr(IDT_LIMIT,IDT);
+}
+
+void set_idt_struct(struct IdtDescriptor* idt_set,uint32_t offset,uint16_t selector,uint8_t ar){
+
+    idt_set->offset_low = offset & 0xffff;
+    idt_set->offset_high = (offset >> 16) & 0xffff;
+
+    idt_set->selector = selector;
+
+    idt_set->zero = 0;
+
+    idt_set->access_right = ar;
 }
