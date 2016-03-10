@@ -1,6 +1,6 @@
 
 section .text
-global _load_gdtr,_load_idtr
+global _load_gdtr,_load_idtr,_out8
 
 _load_gdtr: ;void _load_gdtr(const uint32_t GDT_LIMIT,struct GdtDescriptor* const GDT_ADDR);
     mov ax,[esp+4]
@@ -20,4 +20,10 @@ _load_idtr: ;void _load_idtr(const uint32_t IDT_LIMIT,struct IdtDescriptor* cons
     mov ax,[esp+4]
     mov [esp+6],ax
     lidt [esp+6]
+    ret
+
+_out8: ;void out8(const uint32_t port,const uint32_t data);
+    mov dx,[esp+4]
+    mov al,[esp+8]
+    out dx,al
     ret
