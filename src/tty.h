@@ -23,10 +23,6 @@ enum Vgacolor {
 };
 
 void tty_init();
-void tty_up_row();
-void printf(char* str); // whether it should be put into I/O module?
-uint8_t make_color(enum Vgacolor fg, enum Vgacolor bg);
-uint16_t tty_retchar(char c, uint8_t color);
-
-
+void printf(const char* strtmp, int32_t arg1); // whether it should be put into I/O module?
+void putchar(const char c);
 #endif // TTY_H_INCLUDED

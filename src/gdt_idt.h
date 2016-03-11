@@ -21,5 +21,4 @@ void idt_init();
 void set_idt_struct(struct IdtDescriptor* idt_set,uint32_t offset,uint16_t selector,uint8_t ar);
 
 void pic_init();
-void idt_pic_init();
 #endif // GDT_IDT_H_INCLUDED

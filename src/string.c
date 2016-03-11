@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
-int strlen(char* str) {
+int strlen(const char* str) {
     if(str == NULL)
         return 0;
 

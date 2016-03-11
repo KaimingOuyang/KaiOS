@@ -13,23 +13,6 @@ const uint32_t OS_GDT_CODE_AR = 0x049a;
 const uint32_t OS_GDT_DATA_LIMIT = 0xffffffff;
 const uint32_t OS_GDT_CODE_LIMIT = 0xffffffff;
 
-const uint32_t PIC0_ICW1 = 0x0020;
-const uint32_t PIC0_ICW2 = 0x0021;
-const uint32_t PIC0_ICW3 = 0x0021;
-const uint32_t PIC0_ICW4 = 0x0021;
-
-const uint32_t PIC1_ICW1 = 0x00a0;
-const uint32_t PIC1_ICW2 = 0x00a1;
-const uint32_t PIC1_ICW3 = 0x00a1;
-const uint32_t PIC1_ICW4 = 0x00a1;
-
-const uint32_t PIC0_IMR = 0x0021;
-const uint32_t PIC1_IMR = 0x00a1;
-
-const uint32_t PIC0_OCW2 = 0x0020;
-const uint32_t PIC1_OCW2 = 0x00a0;
-
-
 struct GdtDescriptor* const GDT = (struct GdtDescriptor* const) 0x3f0000;
 struct IdtDescriptor* const IDT = (struct IdtDescriptor* const) 0x3ef800;
 
@@ -58,37 +41,13 @@ void set_gdt_struct(struct GdtDescriptor* gdt_set,uint32_t limit,uint32_t base,u
     return;
 }
 
-
-void idt_pic_init(){
-    idt_init();
-    pic_init();
-}
-
-void pic_init(){
-
-    _out8(PIC0_IMR,0xff);
-    _out8(PIC1_IMR,0xff);
-
-    _out8(PIC0_ICW1,0x11);
-    _out8(PIC0_ICW2,0x20);
-    _out8(PIC0_ICW3,0x04);
-    _out8(PIC0_ICW4,0x01);
-
-    _out8(PIC1_ICW1,0x11);
-    _out8(PIC1_ICW1,0x28);
-    _out8(PIC1_ICW1,0x04);
-    _out8(PIC1_ICW1,0x01);
-
-    _out8(PIC0_IMR,0xfb);
-    _out8(PIC1_IMR,0xff);
-    return;
-}
-
 void idt_init(){
 
-    memset(IDT,0,sizeof(IDT));
+    memset(IDT,0,sizeof(IDT)); // if I have to use sprintf, I must rewrite this line as for()
     _load_idtr(IDT_LIMIT,IDT);
 
+    set_idt_struct(IDT+0x21,_asm_int21_keyboard,0x10,IDT_AR);
+    return;
 }
 
 void set_idt_struct(struct IdtDescriptor* idt_set,uint32_t offset,uint16_t selector,uint8_t ar){
@@ -101,4 +60,5 @@ void set_idt_struct(struct IdtDescriptor* idt_set,uint32_t offset,uint16_t selec
     idt_set->zero = 0;
 
     idt_set->access_right = ar;
+    return;
 }
