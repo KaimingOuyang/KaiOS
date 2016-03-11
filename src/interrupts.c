@@ -19,7 +19,17 @@ const uint32_t PIC1_OCW2 = 0x00a0;
 
 const uint16_t PORT_KEYBOARD = 0x0060;
 
-void pic_init(){
+static uint8_t keyboard_map[0x80] = {
+    0,0,'1','2','3','4','5','6','7','8','9','0','-','=',0,0,'Q',
+    'W','E','R','T','Y','U','I','O','P','[',']',0,0,'A','S','D',
+    'F','G','H','J','K','L',';','\'','`',0,'\\','Z','X','C','V','B',
+    'N','M',',','.','/',0,'*',0,' ',0,0,0,0,0,0,0,0,0,0,0,0,0,
+    '7','8','9','-','4','5','6','+','1','2','3','0','.',0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,'\\',0,0
+};
+
+void pic_init() {
 
     _out8(PIC0_IMR,0xff);
     _out8(PIC1_IMR,0xff);
@@ -41,31 +51,38 @@ void pic_init(){
 }
 
 
-void pic_set_mask(uint8_t pic,uint16_t attr){
-    switch(pic){
-        case PIC0:
-            _out8(PIC0_IMR,attr);
-            break;
-        case PIC1:
-            _out8(PIC1_IMR,attr);
-            break;
+void pic_set_mask(uint8_t pic,uint16_t attr) {
+    switch(pic) {
+    case PIC0:
+        _out8(PIC0_IMR,attr);
+        break;
+    case PIC1:
+        _out8(PIC1_IMR,attr);
+        break;
     }
     return;
 }
 
 struct BufferPool keyboard_buffer;
 
-void keyboard_init(){
+void keyboard_init() {
     keyboard_buffer.front = 0;
     keyboard_buffer.tail = 0;
 }
 
-void int21_keyboard(){
+void int21_keyboard() {
     _out8(PIC0_OCW2,0x61);
-
-    if((keyboard_buffer.tail+1)%BUFFER_LEN != keyboard_buffer.front){
-        keyboard_buffer.buffer[keyboard_buffer.tail++] = _in8(PORT_KEYBOARD);
-        keyboard_buffer.tail %= BUFFER_LEN;
+    uint8_t data = _in8(PORT_KEYBOARD);
+    if(data >= 0x80)
+        return;
+    else {
+        if((keyboard_buffer.tail+1)%BUFFER_LEN != keyboard_buffer.front) {
+            if(keyboard_map[data] != 0)
+                keyboard_buffer.buffer[keyboard_buffer.tail++] = keyboard_map[data];
+            else
+                keyboard_buffer.buffer[keyboard_buffer.tail++] = data;
+            keyboard_buffer.tail %= BUFFER_LEN;
+        }
     }
     return;
 }
