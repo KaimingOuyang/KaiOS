@@ -24,6 +24,16 @@ static uint8_t keyboard_map[0x80] = {
     0,0,0,0,0,0,0,0,0,0
 };
 
+static uint8_t shift_keymap[0x80] = {
+    0,0,'!','@','#','$','%','^','&','*','(',')','_','+',0,0,'Q',
+    'W','E','R','T','Y','U','I','O','P','{','}',0,0,'A','S','D',
+    'F','G','H','J','K','L',':','"','~',0,'|','Z','X','C','V','B',
+    'N','M','<','>','?',0,'*',0,' ',0,0,0,0,0,0,0,0,0,0,0,0,0,
+    '7','8','9','-','4','5','6','+','1','2','3','0','.',0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0
+};
+
 static inline void wait_keyboard_ready();
 
 void keyboard_init() {
@@ -42,7 +52,18 @@ void keyboard_parser(uint16_t data) {
     else if(data == 0x3a) // caps lock
         cap_lock = cap_lock^true;
     else if(data == 0x2a || data == 0x36) { // shift
-
+        while(1){
+            while(fifo_empty(&common_buffer));
+            data = fifo_get(&common_buffer);
+            if(data == 0xaa || data == 0xb6)
+                break;
+            else{
+                if(shift_keymap[data] == '%'){
+                    printf("%%",0);
+                }else
+                    putchar(shift_keymap[data]);
+            }
+        }
     } else if(data == 0x45) // num lock
         num_lock = num_lock^true;
     else if(data == 0x46) // scroll lock
@@ -74,7 +95,6 @@ void keyboard_parser(uint16_t data) {
                 putchar(keyboard_map[data]+32); // lowercase
         }else
             putchar(keyboard_map[data]); // remains
-
     }
     return;
 }

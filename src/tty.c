@@ -28,10 +28,10 @@ void tty_init() {
 
 // need to be modified if there is a root@KaiOS:
 void tty_backspace() {
-    if(tty_column == 0) {
+    if(tty_column == 0 && tty_row > 0) {
         tty_column = VGAWIDTH - 1;
         tty_row--;
-    } else
+    } else if(tty_column > 0)
         tty_column--;
     uint32_t pos = tty_row * VGAWIDTH + tty_column;
     tty_buffer[pos] = tty_retchar(' ',tty_default_color);
@@ -61,18 +61,24 @@ void printf(const char* strtmp, int32_t arg1) {
         if(strtmp[i] != '%')
             str[len++] = strtmp[i];
         else {
-            if(arg1 < 0) {
-                str[len++] = '-';
-                arg1 = -arg1;
-            }
-            if(arg1 == 0) {
-                str[len++] = '0';
-            } else
-                while(arg1 != 0) {
-                    str[len++] = '0' + (char)(arg1%10);
-                    arg1 /= 10;
+            if(strtmp[i+1] == '%') {
+                i++;
+                str[len++] = '%';
+            } else {
+                if(arg1 < 0) {
+                    str[len++] = '-';
+                    arg1 = -arg1;
                 }
-            i++;
+
+                if(arg1 == 0)
+                    str[len++] = '0';
+                else
+                    while(arg1 != 0) {
+                        str[len++] = '0' + (char)(arg1%10);
+                        arg1 /= 10;
+                    }
+                i++;
+            }
         }
     }
     str[len] = '\0';

@@ -61,7 +61,7 @@ extern struct BufferPool common_buffer;
 void int21_keyboard() {
     _out8(PIC0_OCW2,0x61);
     uint8_t data = _in8(PORT_KEYBOARD);
-    if(data >= 0x80)
+    if(data >= 0x80 && data != 0xaa && data != 0xb6 && data != 0xe0 && data != 0xe1) // escaped and shift character
         return;
     else if(!fifo_full(&common_buffer))
         fifo_put(&common_buffer,data);
