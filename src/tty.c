@@ -26,6 +26,31 @@ void tty_init() {
         }
 }
 
+// need to be modified if there is a root@KaiOS:
+void tty_backspace() {
+    if(tty_column == 0) {
+        tty_column = VGAWIDTH - 1;
+        tty_row--;
+    } else
+        tty_column--;
+    uint32_t pos = tty_row * VGAWIDTH + tty_column;
+    tty_buffer[pos] = tty_retchar(' ',tty_default_color);
+    return;
+}
+
+void tty_left() {
+    if(tty_column != 0)
+        tty_column--;
+    return;
+}
+
+// temporary function, should consider its current character boundary
+void tty_right() {
+    if(tty_column != VGAWIDTH - 1)
+        tty_column++;
+    return;
+}
+
 void printf(const char* strtmp, int32_t arg1) {
 
     uint32_t len = 0;

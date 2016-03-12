@@ -1,5 +1,10 @@
 #include <kernel.h>
 
+extern bool cap_lock;
+extern bool num_lock;
+extern bool scr_lock;
+extern struct BufferPool common_buffer;
+
 void KaiOS_main() {
     tty_init();
     gdt_init();
@@ -13,16 +18,11 @@ void KaiOS_main() {
     while(1) {
         if(fifo_empty(&common_buffer)) {
             _hlt();
-        } else{
+        } else {
             data = fifo_get(&common_buffer);
-            putchar(data);
+            if(data < 0xff) // range for keyboard
+                keyboard_parser(data);
         }
-        /*
-            while(keyboard_buffer.front != keyboard_buffer.tail) {
-                putchar(keyboard_buffer.buffer[keyboard_buffer.front++]);
-                keyboard_buffer.front %= BUFFER_LEN;
-            }
-        */
     }
     //while(1);
 }

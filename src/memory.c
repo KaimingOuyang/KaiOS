@@ -13,3 +13,16 @@ void memset(void* addr,uint8_t value,uint32_t size){
     }
     return;
 }
+
+void memcpy(void* to,void* from,uint32_t size){
+    if(to == NULL || from == NULL)
+        return;
+    uint8_t* to_tmp = to;
+    uint8_t* from_tmp = from;
+    uint32_t index = 0;
+    while(size > index){
+        to_tmp[index] = from_tmp[index];
+        index++;
+    }
+    return;
+}

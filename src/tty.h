@@ -23,6 +23,9 @@ enum Vgacolor {
 };
 
 void tty_init();
+void tty_right();
+void tty_left();
+void tty_backspace();
 void printf(const char* strtmp, int32_t arg1); // whether it should be put into I/O module?
 void putchar(const char c);
 #endif // TTY_H_INCLUDED
