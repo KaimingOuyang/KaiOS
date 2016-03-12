@@ -62,6 +62,7 @@ _sti: ;void _sti();
     sti
     ret
 
-_hlt:
+_hlt: ;void _hlt();
     hlt
     ret
+

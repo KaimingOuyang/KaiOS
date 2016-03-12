@@ -1,6 +1,6 @@
 # KaiOS makefile
 CC = i686-elf-gcc
-OBJS = gdt_idt.o interrupts.o kernel.o memory.o string.o tty.o boot.o asmfunc.o
+OBJS = fifo.o gdt_idt.o interrupts.o kernel.o memory.o string.o tty.o boot.o asmfunc.o
 BINFLAGS = -T linker.ld -std=gnu99 -O2 -ffreestanding -nostdlib -lgcc
 OBJFLAGS = -c -ffreestanding -O2 -Wall -Wextra -std=gnu99 -I .
 NASM = nasm
@@ -26,7 +26,7 @@ boot.o:boot.asm $(COMFILE)
 .PHONY:run clean
 
 run:kaios.iso
-	qemu-system-i386 -cdrom kaios.iso
+	qemu-system-i386 -vga vmware -cdrom kaios.iso
 
 clean:
 	@rm $(OBJS)

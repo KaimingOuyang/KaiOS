@@ -18,7 +18,7 @@ void tty_init() {
     tty_row = 0;
     tty_column = 0;
     tty_buffer = (uint16_t*) VGAHEAD;
-    tty_default_color = make_color(COLOR_LIGHT_GREY,COLOR_BLACK);
+    tty_default_color = make_color(COLOR_LIGHT_GREY|8,COLOR_BLACK);
     for(uint32_t y = 0; y < VGAHEIGHT; y++)
         for(uint32_t x = 0; x < VGAWIDTH; x++) {
             uint32_t pos = y * VGAWIDTH + x;
