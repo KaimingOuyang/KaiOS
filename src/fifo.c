@@ -17,7 +17,7 @@ void fifo_put(struct BufferPool* fifo,uint16_t data) {
 }
 
 uint8_t fifo_get(struct BufferPool* fifo){
-    uint8_t data;
+    uint8_t data = 0;
     if(fifo->tail != fifo->front){
         data = fifo->buffer[fifo->front++];
         fifo->front %= BUFFER_LEN;

@@ -46,7 +46,7 @@ void idt_init(){
     memset(IDT,0,sizeof(IDT)); // if I have to use sprintf, I must rewrite this line as for()
     _load_idtr(IDT_LIMIT,IDT);
 
-    set_idt_struct(IDT+0x21,_asm_int21_keyboard,0x10,IDT_AR);
+    set_idt_struct(IDT+0x21,(uint32_t)_asm_int21_keyboard,0x10,IDT_AR);
     return;
 }
 

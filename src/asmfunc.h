@@ -9,7 +9,7 @@ void _sti();
 void _hlt();
 void _load_gdtr(const uint32_t GDT_LIMIT,struct GdtDescriptor* const GDT_ADDR);
 void _load_idtr(const uint32_t IDT_LIMIT,struct IdtDescriptor* const IDT_ADDR);
-
+void _tty_mode_switch();
 void _out8(const uint32_t port,const uint32_t data);
 uint8_t _in8(const uint32_t port);
 

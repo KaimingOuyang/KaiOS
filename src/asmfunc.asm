@@ -1,6 +1,6 @@
 
 section .text
-global _load_gdtr,_load_idtr
+global _load_gdtr,_load_idtr,_tty_mode_switch
 global _out8,_in8
 global _asm_int21_keyboard
 global _sti,_cli,_hlt
@@ -66,3 +66,12 @@ _hlt: ;void _hlt();
     hlt
     ret
 
+_tty_mode_switch:
+    mov edx,0
+    mov eax,0
+    mov dx,0x3c0
+    mov al,0x10
+    out dx,al
+    mov ax,0x10a
+    out dx,ax
+    ret
