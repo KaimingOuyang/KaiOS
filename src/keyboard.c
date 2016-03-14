@@ -36,12 +36,13 @@ static uint8_t shift_keymap[0x80] = {
 };
 
 static inline void wait_keyboard_ready();
+static void set_led();
 
 void keyboard_init() {
     wait_keyboard_ready();
     _out8(KEYDATA, 0xed);
     wait_keyboard_ready();
-    _out8(KEYDATA, 0x02);
+    _out8(KEYDATA, 0x00);
     cap_lock = false;
     num_lock = true;
     scr_lock = false;
@@ -50,8 +51,10 @@ void keyboard_init() {
 void keyboard_parser(uint16_t data) {
     if(data == 0x0f)  // tab
         printf("    "); // 1 tab equals 4 spaces
-    else if(data == 0x3a) // caps lock
+    else if(data == 0x3a){ // caps lock
         cap_lock = cap_lock ^ true;
+        set_led();
+    }
     else if(data == 0x2a || data == 0x36) { // shift
         while(1) {
             while(fifo_empty(&common_buffer));
@@ -67,13 +70,12 @@ void keyboard_parser(uint16_t data) {
         }
     } else if(data == 0x45) { // num lock
         num_lock = num_lock ^ true;
-//        if(num_lock == true)
-//            printf("num_lock:true,");
-//        else
-//            printf("num_lock:false,");
+        set_led();
     }
-    else if(data == 0x46) // scroll lock
+    else if(data == 0x46) { // scroll lock
         scr_lock = scr_lock ^ true;
+        set_led();
+    }
     else if(data == 0x0E) // backspace
         tty_backspace();
     else if(data == 0x1c) // enter
@@ -113,5 +115,20 @@ static inline void wait_keyboard_ready() {
         if((_in8(KEYSTAT) & KEYBOARD_NOT_READY) == 0)
             break;
     }
+    return;
+}
+
+static void set_led(){
+    uint8_t data = 0;
+    if(scr_lock)
+        data |= 1;
+    if(num_lock)
+        data |= 1 << 1;
+    if(cap_lock)
+        data |= 1 << 2;
+    wait_keyboard_ready();
+    _out8(KEYDATA, 0xed);
+    wait_keyboard_ready();
+    _out8(KEYDATA, data);
     return;
 }

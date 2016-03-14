@@ -40,17 +40,14 @@ _in8: ;uint8_t _in8(const uint32 port);
 
 _asm_int21_keyboard: ;void _asm_int21_keyboard();
     pushad
-    push es
     push ds
     push ss
     mov ax,0x08
     mov ss,ax
     mov ds,ax
-    mov es,ax
     call int21_keyboard
     pop ss
     pop ds
-    pop es
     popad
     iretd
 
