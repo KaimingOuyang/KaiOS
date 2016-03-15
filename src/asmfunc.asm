@@ -1,6 +1,6 @@
 
 section .text
-global _load_gdtr,_load_idtr,_load_cr0,_set_cr0
+global _load_gdtr,_load_idtr,_load_cr0,_set_cr0,_set_page_directory,_enable_paging
 global _out8,_in8
 global _asm_int21_keyboard
 global _sti,_cli,_hlt
@@ -69,5 +69,16 @@ _load_cr0: ;uint32_t _load_cr0();
 
 _set_cr0: ;void _set_cr0(uint32_t cr0);
     mov eax,[esp+4]
+    mov cr0,eax
+    ret
+
+_set_page_directory: ;void _set_page_directory(void* page_directory);
+    mov eax,[esp+4]
+    mov cr3,eax
+    ret
+
+_enable_paging: ;void _enable_paging();
+    mov eax,cr0
+    or eax,0x80000000
     mov cr0,eax
     ret

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #define MAX_PAGE_NUM_32 32768 // prime number
-
+#define MAX_TASK_NUM 1001
 struct Bitmap {
     uint32_t space[MAX_PAGE_NUM_32];
     uint32_t max_bit;

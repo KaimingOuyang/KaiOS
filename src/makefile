@@ -26,7 +26,7 @@ boot.o:boot.asm $(COMFILE)
 .PHONY:run clean
 
 run:kaios.iso
-	qemu-system-i386 -vga vmware -cdrom kaios.iso
+	qemu-system-i386 -m 1G -vga vmware -cdrom kaios.iso
 
 clean:
 	@rm $(OBJS)

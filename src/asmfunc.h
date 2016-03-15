@@ -17,4 +17,7 @@ void _asm_int21_keyboard();
 
 uint32_t _load_cr0();
 void _set_cr0(uint32_t cr0);
+
+void _set_page_directory(void* page_directory);
+void _enable_paging();
 #endif // ASMFUNC_H_INCLUDED
