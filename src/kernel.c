@@ -14,6 +14,7 @@ void KaiOS_main() {
     fifo_init(&common_buffer);
     pic_set_mask(PIC0,0xf9);
 
+    mem_init();
     uint8_t data = 0;
     while(1) {
         if(fifo_empty(&common_buffer)) {

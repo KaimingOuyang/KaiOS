@@ -15,7 +15,7 @@ uint16_t* tty_buffer;
 uint32_t tty_pos_start;
 uint32_t tty_pos_end;
 uint32_t tty_pos_cur;
-bool inster_mode = true;
+bool insert_mode = true;
 
 static void tty_screen_up();
 static inline uint8_t make_color(enum Vgacolor fg, enum Vgacolor bg);
@@ -38,7 +38,6 @@ void tty_init() {
     return;
 }
 
-
 // need to be modified if there is a root@KaiOS:
 void tty_backspace() {
     if(tty_pos_cur > tty_pos_start) {
@@ -53,7 +52,6 @@ void tty_backspace() {
 void tty_left() {
     if(tty_pos_cur > tty_pos_start)
         tty_pos_cur--;
-
     return;
 }
 
@@ -62,6 +60,35 @@ void tty_right() {
         tty_pos_cur++;
     return;
 }
+
+void tty_home() {
+    tty_pos_cur = tty_pos_start;
+    return;
+}
+
+void tty_end() {
+    tty_pos_cur = tty_pos_end;
+    return;
+}
+
+void tty_delete() {
+    if(tty_pos_cur != tty_pos_end) {
+        for(uint32_t i = tty_pos_cur + 1; i <= tty_pos_end; i++)
+            tty_buffer[i - 1] = tty_buffer[i];
+        tty_pos_end--;
+    }
+    return;
+}
+
+/*
+void tty_up(){
+
+}
+
+void tty_down(){
+
+}
+*/
 
 void tty_enter() {
     uint32_t com_len = tty_pos_end - tty_pos_start;
@@ -82,10 +109,10 @@ void tty_enter() {
 static void command_line_parser(const char* command) {
     if(streq(command, "clear")) {
         for(uint32_t y = 0; y < VGAHEIGHT; y++)
-        for(uint32_t x = 0; x < VGAWIDTH; x++) {
-            uint32_t pos = y * VGAWIDTH + x;
-            tty_buffer[pos] = tty_retchar(' ', tty_default_color);
-        }
+            for(uint32_t x = 0; x < VGAWIDTH; x++) {
+                uint32_t pos = y * VGAWIDTH + x;
+                tty_buffer[pos] = tty_retchar(' ', tty_default_color);
+            }
         tty_pos_cur = 0;
         tty_pos_end = 0;
     } else { // add command for shell
@@ -107,7 +134,7 @@ void printf(const char* str, ...) {
                 if(str[i + 1] == '%') {
                     tty_output_char('%');
                 } else {
-                    // %s,%d implementation
+                    // %s,%d,%u implementation
                     const char* arg_str;
                     if(str[i + 1] == 's') { // parser string
                         arg_str = va_arg(arg_list, const char*);
@@ -116,29 +143,33 @@ void printf(const char* str, ...) {
                         for(uint32_t j = 0; j < inner_len; j++)
                             tty_output_char(arg_str[j]);
 
-                    } else if(str[i + 1] == 'd') { // parser int
-                        int32_t arg_int = va_arg(arg_list, int32_t);
-                        if(arg_int < 0) {
-                            tty_output_char('-');
-                            arg_int = -arg_int;
+                    } else if(str[i + 1] == 'd' || str[i + 1] == 'u') { // parser int
+                        uint32_t arg_int = va_arg(arg_list, uint32_t);
+                        if(str[i + 1] == 'd') {
+                            if((arg_int & (1 << 31)) == 1) {
+                                tty_output_char('-');
+                                arg_int = ~arg_int + 1;
+                            }
                         }
+
                         if(arg_int == 0)
                             tty_output_char('0');
                         else {
                             // save memory because length is not sure
                             uint32_t int_len = 0;
-                            while(arg_int != 0) {
+                            uint32_t int_tmp = arg_int;
+                            while(int_tmp != 0) {
                                 int_len++;
-                                arg_int /= 10;
+                                int_tmp /= 10;
                             }
-
+                            int_tmp = arg_int;
                             // should be modified when memory management is finished
                             char int_buffer[int_len];
                             for(int32_t j = int_len - 1; j >= 0; j--) {
-                                int_buffer[j] = '0' + (char)(arg_int % 10);
-                                arg_int /= 10;
+                                int_buffer[j] = '0' + (char)(int_tmp % 10);
+                                int_tmp /= 10;
                             }
-                            for(uint32_t j = 0; i < int_len; j++)
+                            for(uint32_t j = 0; j < int_len; j++)
                                 tty_output_char(int_buffer[j]);
                         }
                         //arg_str = parser_int(va_arg(arg_list, int));
@@ -168,14 +199,14 @@ static void tty_output_char(const char c) {
         tty_pos_cur = cur_row * VGAWIDTH;
         tty_pos_end = tty_pos_cur;
     } else {
-        if(inster_mode) {
+        if(insert_mode) {
             if(tty_pos_cur != tty_pos_end)
                 for(uint32_t i = tty_pos_end - 1; i >= tty_pos_cur; i--)
                     tty_buffer[i + 1] = tty_buffer[i];
         }
 
         tty_buffer[tty_pos_cur] = tty_retchar(c, tty_default_color);
-        if(inster_mode || (tty_pos_cur == tty_pos_end)) {
+        if(insert_mode || (tty_pos_cur == tty_pos_end)) {
             tty_pos_end++;
         }
         tty_pos_cur++;

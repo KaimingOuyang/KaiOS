@@ -5,6 +5,7 @@
 #include <fifo.h>
 #include <stdbool.h>
 #include <gdt_idt.h>
+#include <memory.h>
 #include <asmfunc.h>
 #include <keyboard.h>
 #include <interrupts.h>

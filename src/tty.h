@@ -29,4 +29,8 @@ void tty_enter();
 void tty_backspace();
 void printf(const char* strtmp, ...); // whether it should be put into I/O module?
 void putchar(const char c);
+void tty_home();
+void tty_end();
+void tty_delete();
+
 #endif // TTY_H_INCLUDED
