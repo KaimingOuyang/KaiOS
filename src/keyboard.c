@@ -57,7 +57,9 @@ void keyboard_parser(uint16_t data) {
     } else if(data == 0x2a || data == 0x36) { // shift
         while(1) {
             while(fifo_empty(&common_buffer));
+
             data = fifo_get(&common_buffer);
+
             if(data == 0xaa || data == 0xb6)
                 break;
             else {
@@ -80,6 +82,7 @@ void keyboard_parser(uint16_t data) {
     else if(data == 0xe0) { // escaped key
 
         data = fifo_get(&common_buffer);
+
         if(data == 0x1c) // keypad enter
             tty_enter();
         else if(data == 0x4b) // left key
@@ -94,6 +97,7 @@ void keyboard_parser(uint16_t data) {
             tty_end();
         else if(data == 0x47) // home key
             tty_home();
+
         // continue to finish remaining up/down and page up/down
     } else if(0x47 <= data && data <= 0x52 && data != 0x4a && data != 0x4e) { // keypad number
         if(num_lock == true)
@@ -106,6 +110,7 @@ void keyboard_parser(uint16_t data) {
             tty_right();
         else if(data == 0x47) // 7 home
             tty_home();
+
         // continue to finish remaining keypad number up/down and page up/down
     } else if(0x02 <= data && data <= 0x0b) { // keyboard number
         putchar(keyboard_map[data]);
@@ -118,6 +123,7 @@ void keyboard_parser(uint16_t data) {
         } else
             putchar(keyboard_map[data]); // remains
     }
+
     return;
 }
 
@@ -126,17 +132,22 @@ static inline void wait_keyboard_ready() {
         if((_in8(KEYSTAT) & KEYBOARD_NOT_READY) == 0)
             break;
     }
+
     return;
 }
 
 static void set_led() {
     uint8_t data = 0;
+
     if(scr_lock)
         data |= 1;
+
     if(num_lock)
         data |= 1 << 1;
+
     if(cap_lock)
         data |= 1 << 2;
+
     wait_keyboard_ready();
     _out8(KEYDATA, 0xed);
     wait_keyboard_ready();

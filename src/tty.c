@@ -7,8 +7,8 @@
 const uint32_t VGAHEAD = 0xB8000;
 const uint32_t VGAWIDTH = 80;
 const uint32_t VGAHEIGHT = 25;
-const char MACHINE_TITLE[] = "root@KaiOS:";
-const uint32_t TITLE_LEN = 11;
+const char MACHINE_TITLE[] = "root@KaiOS:/# ";
+const uint32_t TITLE_LEN = 14;
 
 uint8_t tty_default_color;
 uint16_t* tty_buffer;
