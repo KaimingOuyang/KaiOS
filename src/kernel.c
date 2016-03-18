@@ -3,14 +3,15 @@
 static void task_begin();
 extern struct TaskAdmin* task_admin;
 void KaiOS_main() {
-    tty_init();
     gdt_init();
     mem_init();
+    task_admin_init();
+    tty_init();
     idt_init();
     pic_init();
     keyboard_init();
-    pic_set_mask(PIC0, 0xf9); // enable keyboard
-    task_admin_init();
+    pic_set_mask(PIC0, 0xf8);
+
     task_begin();
     return;
 }

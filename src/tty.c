@@ -3,7 +3,7 @@
 #include <stdarg.h> // used in printf function
 #include <asmfunc.h>
 #include <stdbool.h>
-
+#include <task.h>
 /*
 struct PMInfoBlock{
     uint8_t signature[4];
@@ -24,7 +24,7 @@ uint32_t tty_pos_start;
 uint32_t tty_pos_end;
 uint32_t tty_pos_cur;
 bool insert_mode = true;
-
+extern struct TaskAdmin* task_admin;
 static void tty_screen_up();
 static inline uint8_t make_color(enum Vgacolor fg, enum Vgacolor bg);
 static inline uint16_t tty_retchar(char c, uint8_t color);
@@ -43,12 +43,13 @@ void tty_init() {
     return;
 }
 
-void tty_buffer_init(uint16_t* buffer){
+void tty_buffer_init(uint16_t* buffer) {
     for(uint32_t y = 0; y < VGAHEIGHT; y++)
         for(uint32_t x = 0; x < VGAWIDTH; x++) {
             uint32_t pos = y * VGAWIDTH + x;
             buffer[pos] = tty_retchar(' ', tty_default_color);
         }
+
     return;
 }
 /*
@@ -230,6 +231,7 @@ void printf(const char* str, ...) {
                         uint32_t int_tmp = va_arg(arg_list, uint32_t);
                         tty_output_char('0');
                         tty_output_char('x');
+
                         for(uint32_t index_1 = 8; index_1 > 0; index_1--) {
                             if((int_tmp & 0xf) >= 0xa)
                                 hex_str[index_1 - 1] = 'A' + (char)(int_tmp & 0xf) - 0xa;
@@ -241,7 +243,6 @@ void printf(const char* str, ...) {
 
                         for(uint32_t index_1 = 0; index_1 < 8; index_1++)
                             tty_output_char(hex_str[index_1]);
-
                     }
                 }
             }
@@ -273,50 +274,78 @@ static void update_cursor() {
 }
 
 static void tty_output_char(const char c) {
-    if(c == '\n') {
-        uint32_t cur_row = tty_pos_cur / VGAWIDTH;
+    uint32_t show_id = task_admin->show_screen_id;
+    uint32_t cur_id = task_admin->running->task_id;
 
-        if(cur_row == VGAHEIGHT - 1)
-            tty_screen_up();
-        else
+    if(c == '\n') {
+        uint32_t cur_row = task_admin->tasks[cur_id].tty_pos_cur / VGAWIDTH;
+
+        if(cur_row == VGAHEIGHT - 1) {
+            if(show_id == cur_id)
+                tty_screen_up(tty_buffer);
+
+            tty_screen_up(task_admin->tasks[cur_id].tty_buffer);
+        } else
             cur_row++;
 
-        tty_pos_cur = cur_row * VGAWIDTH;
-        tty_pos_end = tty_pos_cur;
+        if(show_id == cur_id) {
+            tty_pos_cur = cur_row * VGAWIDTH;
+            tty_pos_end = tty_pos_cur;
+        }
+
+        task_admin->tasks[cur_id].tty_pos_cur = cur_row * VGAWIDTH;
+        task_admin->tasks[cur_id].tty_pos_end = task_admin->tasks[cur_id].tty_pos_cur;
     } else {
         if(insert_mode) {
-            if(tty_pos_cur != tty_pos_end)
-                for(uint32_t i = tty_pos_end; i > tty_pos_cur; i--)
-                    tty_buffer[i] = tty_buffer[i-1];
+            if(show_id == cur_id)
+                for(uint32_t index_1 = tty_pos_end; index_1 > tty_pos_cur; index_1--)
+                    tty_buffer[index_1] = tty_buffer[index_1 - 1];
+
+            if(task_admin->tasks[cur_id].tty_pos_cur != task_admin->tasks[cur_id].tty_pos_end)
+                for(uint32_t index_1 = task_admin->tasks[cur_id].tty_pos_end;
+                        index_1 > task_admin->tasks[cur_id].tty_pos_cur; index_1++)
+                    task_admin->tasks[cur_id].tty_buffer[index_1] = task_admin->tasks[cur_id].tty_buffer[index_1 - 1];
         }
 
-        tty_buffer[tty_pos_cur] = tty_retchar(c, tty_default_color);
+        if(show_id == cur_id) {
+            tty_buffer[tty_pos_cur] = tty_retchar(c, tty_default_color);
 
-        if(insert_mode || (tty_pos_cur == tty_pos_end)) {
-            tty_pos_end++;
+            if(insert_mode || (tty_pos_cur == tty_pos_end)) {
+                tty_pos_end++;
+            }
+
+            tty_pos_cur++;
+
+            if(tty_pos_end == VGAWIDTH * VGAHEIGHT)
+                tty_screen_up(tty_buffer);
         }
 
-        tty_pos_cur++;
+        task_admin->tasks[cur_id].tty_buffer[task_admin->tasks[cur_id].tty_pos_cur] = tty_retchar(c, tty_default_color);
 
-        if(tty_pos_end == VGAWIDTH * VGAHEIGHT)
-            tty_screen_up();
+        if(insert_mode || (task_admin->tasks[cur_id].tty_pos_cur == task_admin->tasks[cur_id].tty_pos_end)) {
+            task_admin->tasks[cur_id].tty_pos_end++;
+        }
+
+        task_admin->tasks[cur_id].tty_pos_cur++;
+
+        if(task_admin->tasks[cur_id].tty_pos_end == VGAWIDTH * VGAHEIGHT)
+            tty_screen_up(task_admin->tasks[cur_id].tty_buffer);
     }
-
 
     return;
 }
 
-static void tty_screen_up() {
+static void tty_screen_up(uint16_t* buffer) {
     for(uint32_t i = 1; i < VGAHEIGHT; i++)
         for(uint32_t j = 0; j < VGAWIDTH; j++) {
             uint32_t pos = i * VGAWIDTH + j;
             uint32_t rep = (i - 1) * VGAWIDTH + j;
-            tty_buffer[rep] = tty_buffer[pos];
+            buffer[rep] = buffer[pos];
         }
 
     for(uint32_t j = 0; j < VGAWIDTH; j++) {
         uint32_t pos = (VGAHEIGHT - 1) * VGAWIDTH + j;
-        tty_buffer[pos] = tty_retchar(' ', tty_default_color);
+        buffer[pos] = tty_retchar(' ', tty_default_color);
     }
 
     tty_pos_start -= VGAWIDTH;

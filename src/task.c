@@ -1,8 +1,7 @@
 #include <task.h>
-
 #include <asmfunc.h>
 #include <gdt_idt.h>
-
+#include <memory.h>
 struct TaskAdmin* task_admin;
 extern struct GdtDescriptor* GDT;
 

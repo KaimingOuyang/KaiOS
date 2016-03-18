@@ -47,6 +47,7 @@ void set_gdt_struct(struct GdtDescriptor* gdt_set, uint32_t limit, uint32_t base
 
 void idt_init() {
     memset(IDT, 0, 1 << 11); // if I have to use sprintf, I must rewrite this line as for()
+    set_idt_struct(IDT + 0x20, (uint32_t)_asm_int20_timer,KERNEL_CODE_SEGMENT * 8, IDT_AR); // timer
     set_idt_struct(IDT + 0x21, (uint32_t)_asm_int21_keyboard, KERNEL_CODE_SEGMENT * 8, IDT_AR); // keyboard
     _load_idtr(IDT_LIMIT, IDT);
     return;
