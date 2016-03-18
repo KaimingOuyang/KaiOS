@@ -2,8 +2,7 @@
 MAGIC EQU 0x1BADB002
 MALIGN EQU 1 << 0
 MEMINFO EQU 1 << 1
-GRAPHMODE EQU 1 << 2
-FLAGS EQU MALIGN | MEMINFO | GRAPHMODE
+FLAGS EQU MALIGN | MEMINFO
 CHECKSUM EQU -(FLAGS + MAGIC)
 
 section .multiboot
@@ -11,8 +10,6 @@ align 4
 	dd MAGIC
 	dd FLAGS
 	dd CHECKSUM
-    dd 0,0,0,0,0
-    dd 1,40,25,0
 
 section .bootstrap_stack
 align 4

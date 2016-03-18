@@ -1,18 +1,28 @@
 
+
 section .text
 global _load_gdtr,_load_idtr,_load_cr0,_set_cr0,_set_page_directory,_enable_paging
 global _out8,_in8
 global _asm_int21_keyboard
 global _sti,_cli,_hlt
+global _load_tr,_switch_task_b,_load_page_directory
 extern int21_keyboard
+
+_switch_task_b:
+    jmp 2*8:0
+    ret
+
+_load_tr: ;void _load_tr(uint16_t seg);
+    ltr [esp+4]
+    ret
 
 _load_gdtr: ;void _load_gdtr(const uint32_t GDT_LIMIT,struct GdtDescriptor* const GDT_ADDR);
     mov ax,[esp+4]
     mov [esp+6],ax
     lgdt [esp+6]
-    jmp 0x10:reload_reg ;reload cs register
+    jmp 1001*8:reload_reg ;reload cs register
 reload_reg: ;reload all other segment registers
-    mov ax,0x08
+    mov ax,2001*8
     mov ds,ax
     mov es,ax
     mov ss,ax
@@ -42,7 +52,7 @@ _asm_int21_keyboard: ;void _asm_int21_keyboard();
     pushad
     push ds
     push ss
-    mov ax,0x08
+    mov ax,2001*8
     mov ss,ax
     mov ds,ax
     call int21_keyboard
@@ -81,4 +91,8 @@ _enable_paging: ;void _enable_paging();
     mov eax,cr0
     or eax,0x80000000
     mov cr0,eax
+    ret
+
+_load_page_directory: ;uint32_t _load_page_directory();
+    mov eax,cr3
     ret

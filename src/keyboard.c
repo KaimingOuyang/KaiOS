@@ -3,16 +3,15 @@
 #include <tty.h>
 #include <asmfunc.h>
 #include <stdbool.h>
+#define KEYSTAT 0x64
+#define KEYDATA 0x60
+#define KEYBOARD_NOT_READY 0x02
 
 bool cap_lock;
 bool num_lock;
 bool scr_lock;
+bool shift_push = false;
 
-const uint8_t KEYSTAT = 0x64;
-const uint8_t KEYDATA = 0x60;
-const uint8_t KEYBOARD_NOT_READY = 0x02;
-
-extern struct BufferPool common_buffer;
 extern bool insert_mode;
 
 static uint8_t keyboard_map[0x80] = {
@@ -48,28 +47,19 @@ void keyboard_init() {
     scr_lock = false;
 }
 
-void keyboard_parser(uint16_t data) {
+
+
+void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
     if(data == 0x0f)  // tab
         printf("    "); // 1 tab equals 4 spaces
     else if(data == 0x3a) { // caps lock
         cap_lock = cap_lock ^ true;
         set_led();
-    } else if(data == 0x2a || data == 0x36) { // shift
-        while(1) {
-            while(fifo_empty(&common_buffer));
-
-            data = fifo_get(&common_buffer);
-
-            if(data == 0xaa || data == 0xb6)
-                break;
-            else {
-                if(shift_keymap[data] == '%') {
-                    printf("%%");
-                } else
-                    putchar(shift_keymap[data]);
-            }
-        }
-    } else if(data == 0x45) { // num lock
+    } else if(data == 0x2a || data == 0x36)  // shift
+        shift_push = true;
+    else if(data == 0xaa || data == 0xb6)
+        shift_push = false;
+    else if(data == 0x45) { // num lock
         num_lock = num_lock ^ true;
         set_led();
     } else if(data == 0x46) { // scroll lock
@@ -81,7 +71,7 @@ void keyboard_parser(uint16_t data) {
         tty_enter();
     else if(data == 0xe0) { // escaped key
 
-        data = fifo_get(&common_buffer);
+        data = fifo_get(common_buffer);
 
         if(data == 0x1c) // keypad enter
             tty_enter();
@@ -113,16 +103,23 @@ void keyboard_parser(uint16_t data) {
 
         // continue to finish remaining keypad number up/down and page up/down
     } else if(0x02 <= data && data <= 0x0b) { // keyboard number
-        putchar(keyboard_map[data]);
-    } else {
-        if(65 <= keyboard_map[data] && keyboard_map[data] <= 90) { // character
-            if(cap_lock == true)
-                putchar(keyboard_map[data]); // uppercase
+        if(shift_push == true) {
+            if(shift_keymap[data] == '%')
+                printf("%%");
             else
-                putchar(keyboard_map[data] + 32); // lowercase
+                putchar(shift_keymap[data]);
         } else
-            putchar(keyboard_map[data]); // remains
-    }
+            putchar(keyboard_map[data]);
+    } else if(65 <= keyboard_map[data] && keyboard_map[data] <= 90) { // character
+        if(cap_lock == true || shift_push == true)
+            putchar(keyboard_map[data]); // uppercase
+        else
+            putchar(keyboard_map[data] + 32); // lowercase
+    } else if(shift_push == false)
+        putchar(keyboard_map[data]); // remains
+    else
+        putchar(shift_keymap[data]);
+
 
     return;
 }

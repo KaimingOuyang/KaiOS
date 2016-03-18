@@ -2,18 +2,15 @@
 #define MEMORY_H_INCLUDED
 
 #include <stdint.h>
-#define MAX_PAGE_NUM_32 32768
-#define MAX_TASK_NUM 1001
-
-enum AllocType {
-    CODE = 0, STACK = 1, PILE = 2
-};
-
+#define MEM_TEST_START  0x00400000
+#define MEM_TEST_END  0xffffffff
+#define DISABLE_CACHE_MASK  0x60000000
+#define PAGE_SIZE  4096
+#define PAGE_ENTRY_NUM  1024
+#define MEM_ITEM_MAX 1024
 void mem_init();
 void memset(void* addr,uint8_t value,uint32_t size);
 void memcpy(void* to,void* from,uint32_t size);
-void* page_alloc();
-void free(void* vaddr, uint32_t size, uint32_t task_num);
-void* malloc(uint32_t size, enum AllocType type, uint32_t task_num);
-
+void kernel_free(void* addr, uint32_t size);
+void* kernel_alloc(uint32_t size) ;
 #endif // MEMORY_H_INCLUDED

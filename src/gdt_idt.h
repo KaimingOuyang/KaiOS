@@ -2,6 +2,21 @@
 #define GDT_IDT_H_INCLUDED
 
 #include <stdint.h>
+
+#define GDT_LIMIT 0xffff
+#define IDT_LIMIT 0x7ff
+#define IDT_COUNT 0xff
+#define IDT_AR 0x8e
+#define OS_GDT_DATA_BASE 0
+#define OS_GDT_CODE_BASE 0
+#define OS_GDT_DATA_AR 0x0492
+#define OS_GDT_CODE_AR 0x049a
+#define OS_GDT_DATA_LIMIT 0xffffffff
+#define OS_GDT_CODE_LIMIT 0xffffffff
+#define KERNEL_CODE_SEGMENT 1001
+#define KERNEL_DATA_SEGMENT 2001
+#define TSS_AR 0x0089
+
 struct GdtDescriptor{
     uint16_t limit_low,base_low;
     uint8_t base_mid,access_right;
@@ -14,6 +29,7 @@ struct IdtDescriptor{
     uint16_t offset_high;
 };
 
+void task_init();
 void gdt_init();
 void set_gdt_struct(struct GdtDescriptor* gdt_set,uint32_t limit,uint32_t base,uint16_t ar);
 
