@@ -1,9 +1,10 @@
 #ifndef TASK_H_INCLUDED
 #define TASK_H_INCLUDED
 #include <stdint.h>
-#include <tty.h>
 #include <fifo.h>
 #define MAX_TASK 128
+#define VGAWIDTH 80
+#define VGAHEIGHT 25
 struct Tss32 {
     uint32_t backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
     uint32_t eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
@@ -12,7 +13,8 @@ struct Tss32 {
 };
 
 struct Task {
-    uint16_t tty_buffer[VGAHEIGHT*VGAWIDTH], selector, task_id;
+    uint16_t selector, task_id;
+    uint16_t* tty_buffer;
     uint32_t tty_pos_cur,tty_pos_start,tty_pos_end;
     struct Tss32 tss;
     struct BufferPool fifo;

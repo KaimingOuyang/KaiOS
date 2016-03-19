@@ -2,19 +2,20 @@
 #include <asmfunc.h>
 #include <gdt_idt.h>
 #include <memory.h>
+#include <tty.h>
 struct TaskAdmin* task_admin;
 extern struct GdtDescriptor* GDT;
 
 void task_admin_init() {
     task_admin = (struct TaskAdmin*) kernel_alloc(sizeof(struct TaskAdmin));
-    task_init(&task_admin->tasks[0], 1 * 8, 0, 0, 0, 0, 0, 0);
-    task_admin->show_screen_id = 0;
+    task_init(&task_admin->tasks[1], 1 * 8, 1, 0, 0, 0, 0, 0);
+    task_admin->show_screen_id = 1;
     task_admin->task_len = 1;
-    task_admin->running = &task_admin->tasks[0];
+    task_admin->running = &task_admin->tasks[1];
     task_admin->ready_cur = 0;
     task_admin->ready_len = 0;
     task_admin->sleep_len = 0;
-    set_gdt_struct(GDT + 1, 103, (uint32_t)&task_admin->tasks[0].tss, TSS_AR);
+    set_gdt_struct(GDT + 1, 103, (uint32_t)&task_admin->tasks[1].tss, TSS_AR);
     _load_tr(1 * 8);
 //    uint8_t* iomap = (uint8_t*)kernel_alloc(PAGE_SIZE * 2); // 8KB
 //    memset(iomap, 0, PAGE_SIZE * 2);
@@ -57,7 +58,8 @@ void task_init(struct Task* task, uint32_t selector, uint32_t id,
     fifo_init(&task->fifo);
     task->selector = selector;
     task->task_id = id;
-    tty_buffer_init(task->tty_buffer);
+    task->tty_buffer = (uint16_t*) kernel_alloc(sizeof(uint16_t) * VGAHEIGHT * VGAWIDTH);
+    tty_buffer_init(task);
     task->tty_pos_cur = 0;
     task->tty_pos_start = 0;
     task->tty_pos_end = 0;

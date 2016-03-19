@@ -11,8 +11,9 @@ bool cap_lock;
 bool num_lock;
 bool scr_lock;
 bool shift_push = false;
-
-extern bool insert_mode;
+bool alt_push = false;
+bool ctrl_push = false;
+bool insert_mode = true;
 
 static uint8_t keyboard_map[0x80] = {
     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0, 'Q',
@@ -57,7 +58,7 @@ void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
         set_led();
     } else if(data == 0x2a || data == 0x36)  // shift
         shift_push = true;
-    else if(data == 0xaa || data == 0xb6)
+    else if(data == 0xaa || data == 0xb6) // shift release
         shift_push = false;
     else if(data == 0x45) { // num lock
         num_lock = num_lock ^ true;
@@ -69,6 +70,14 @@ void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
         tty_backspace();
     else if(data == 0x1c) // enter
         tty_enter();
+    else if(data == 0x38) // left alt
+        alt_push = true;
+    else if(data == 0xB8) // left alt release
+        alt_push = false;
+    else if(data == 0x1D) // left control
+        ctrl_push = true;
+    else if(data == 0x9D) // left control release
+        ctrl_push = false;
     else if(data == 0xe0) { // escaped key
 
         data = fifo_get(common_buffer);
@@ -87,6 +96,14 @@ void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
             tty_end();
         else if(data == 0x47) // home key
             tty_home();
+        else if(data == 0x38) // right alt
+            alt_push = true;
+        else if(data == 0xb8) // right alt release
+            alt_push = false;
+        else if(data == 0x1D) // right control
+            ctrl_push = true;
+        else if(data == 0x9D) // right control release
+            ctrl_push = false;
 
         // continue to finish remaining up/down and page up/down
     } else if(0x47 <= data && data <= 0x52 && data != 0x4a && data != 0x4e) { // keypad number
@@ -110,15 +127,18 @@ void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
                 putchar(shift_keymap[data]);
         } else
             putchar(keyboard_map[data]);
-    } else if(65 <= keyboard_map[data] && keyboard_map[data] <= 90) { // character
-        if(cap_lock == true || shift_push == true)
-            putchar(keyboard_map[data]); // uppercase
+    } else if(data < 0x80) {
+        if(65 <= keyboard_map[data] && keyboard_map[data] <= 90) { // character
+            if(cap_lock == true || shift_push == true)
+                putchar(keyboard_map[data]); // uppercase
+            else
+                putchar(keyboard_map[data] + 32); // lowercase
+        } else if(shift_push == false)
+            putchar(keyboard_map[data]); // remains
         else
-            putchar(keyboard_map[data] + 32); // lowercase
-    } else if(shift_push == false)
-        putchar(keyboard_map[data]); // remains
-    else
-        putchar(shift_keymap[data]);
+            putchar(shift_keymap[data]);
+    }
+
 
 
     return;

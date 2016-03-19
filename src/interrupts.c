@@ -76,6 +76,7 @@ void pic_set_mask(uint8_t pic, uint16_t attr) {
 
 void int20_timer() {
     _out8(PIC0_OCW2, 0x60);
+
     if(task_admin->ready_len > 0) {
         uint32_t ready_id = task_admin->ready[task_admin->ready_cur]->task_id;
         struct Task* temp = task_admin->running;
@@ -91,15 +92,10 @@ void int20_timer() {
 void int21_keyboard() {
     _out8(PIC0_OCW2, 0x61);
     uint8_t data = _in8(PORT_KEYBOARD);
+    uint32_t id = task_admin->show_screen_id;
 
-    if(data >= 0x80 && data != 0xaa && data != 0xb6 && data != 0xe0 && data != 0xe1) // escaped and shift character
-        return;
-    else {
-        uint32_t id = task_admin->show_screen_id;
-
-        if(!fifo_full(&task_admin->tasks[id].fifo))
-            fifo_put(&task_admin->tasks[id].fifo, data);
-    }
+    if(!fifo_full(&task_admin->tasks[id].fifo))
+        fifo_put(&task_admin->tasks[id].fifo, data);
 
     return;
 }

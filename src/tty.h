@@ -2,11 +2,11 @@
 #define TTY_H_INCLUDED
 
 #include <stdint.h>
+#include <task.h>
 #define VGAHEAD 0xB8000
 #define VGAWIDTH 80
 #define VGAHEIGHT 25
-#define MACHINE_TITLE "root@KaiOS:/# "
-#define TITLE_LEN 14
+#define MACHINE_TITLE "root@KaiOS:/"
 
 enum Vgacolor {
     COLOR_BLACK = 0,
@@ -37,5 +37,6 @@ void putchar(const char c);
 void tty_home();
 void tty_end();
 void tty_delete();
-void tty_buffer_init(uint16_t* buffer);
+void make_title(const char* str, struct Task* task, uint8_t flag);
+void tty_buffer_init(struct Task* task);
 #endif // TTY_H_INCLUDED
