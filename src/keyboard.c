@@ -104,6 +104,8 @@ void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
             ctrl_push = true;
         else if(data == 0x9D) // right control release
             ctrl_push = false;
+        else if(data == 0x35) // keypad /
+            putchar('/');
 
         // continue to finish remaining up/down and page up/down
     } else if(0x47 <= data && data <= 0x52 && data != 0x4a && data != 0x4e) { // keypad number
