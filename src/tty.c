@@ -4,6 +4,7 @@
 #include <asmfunc.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <memory.h>
 /*
 struct PMInfoBlock{
     uint8_t signature[4];
@@ -18,53 +19,6 @@ struct PMInfoBlock{
     uint8_t check_sum;
 };
 */
-uint8_t tty_default_color;
-extern bool insert_mode;
-extern struct TaskAdmin* task_admin;
-
-static void tty_screen_up(struct Task* task);
-static inline uint8_t make_color(enum Vgacolor fg, enum Vgacolor bg);
-static inline uint16_t tty_retchar(char c, uint8_t color);
-static void command_line_parser(const char* command);
-static inline void tty_output_char(const char c);
-static void update_cursor();
-static void tty_output_char_task(const char c, struct Task* task);
-
-void tty_init() {
-    task_admin->tasks[0].tty_pos_cur = 0;
-    task_admin->tasks[0].tty_pos_end = 0;
-    task_admin->tasks[0].tty_pos_start = 0;
-    task_admin->tasks[0].tty_buffer = (uint16_t*) VGAHEAD;
-    tty_default_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
-    tty_buffer_init(&task_admin->tasks[0]);
-    return;
-}
-
-void tty_buffer_init(struct Task* task) {
-    for(uint32_t y = 0; y < VGAHEIGHT; y++)
-        for(uint32_t x = 0; x < VGAWIDTH; x++) {
-            uint32_t pos = y * VGAWIDTH + x;
-            task->tty_buffer[pos] = tty_retchar(' ', tty_default_color);
-        }
-
-    make_title(MACHINE_TITLE, task,0);
-    return;
-}
-
-void make_title(const char* str, struct Task* task, uint8_t flag) {
-    uint32_t len = strlen(str);
-    if(flag == 1)
-        task->tty_pos_start -= 2;
-
-    for(uint32_t index_1 = 0; index_1 < len; index_1++)
-        task->tty_buffer[task->tty_pos_start++] = tty_retchar(str[index_1], tty_default_color);
-
-    task->tty_buffer[task->tty_pos_start++] = tty_retchar('#', tty_default_color);
-    task->tty_buffer[task->tty_pos_start++] = tty_retchar(' ', tty_default_color);;
-    task->tty_pos_end = task->tty_pos_cur = task->tty_pos_start;
-    return;
-}
-
 /*
 struct PMInfoBlock* head;
 
@@ -80,7 +34,62 @@ void adjust_resolution(uint32_t column, uint32_t row){
 
 }
 */
-// need to be modified if there is a root@KaiOS:
+
+
+/*
+    tty depends on task, so anything tty should do must be done in task
+*/
+
+uint8_t tty_default_color;
+extern bool insert_mode;
+extern struct TaskAdmin* task_admin;
+extern struct MemAdmin mem_admin;
+extern uint32_t** kernel_page_directory;
+extern struct GdtDescriptor* GDT;
+
+static void tty_screen_up(struct Task* task);
+static inline uint8_t make_color(enum Vgacolor fg, enum Vgacolor bg);
+static inline uint16_t tty_retchar(char c, uint8_t color);
+static void command_line_parser(const char* command);
+static inline void tty_output_char(const char c);
+static void update_cursor();
+static void tty_output_char_task(const char c, struct Task* task);
+
+void tty_init(struct Task* task) {
+    task->tty_pos_cur = 0;
+    task->tty_pos_end = 0;
+    task->tty_pos_start = 0;
+    tty_default_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
+    tty_buffer_init(task);
+    return;
+}
+
+void tty_buffer_init(struct Task* task) {
+    for(uint32_t y = 0; y < VGAHEIGHT; y++)
+        for(uint32_t x = 0; x < VGAWIDTH; x++) {
+            uint32_t pos = y * VGAWIDTH + x;
+            task->tty_buffer[pos] = tty_retchar(' ', tty_default_color);
+        }
+
+    make_title(MACHINE_TITLE, task, 0);
+    return;
+}
+
+void make_title(const char* str, struct Task* task, uint8_t flag) {
+    uint32_t len = strlen(str);
+
+    if(flag == 1)
+        task->tty_pos_start -= 2;
+
+    for(uint32_t index_1 = 0; index_1 < len; index_1++)
+        task->tty_buffer[task->tty_pos_start++] = tty_retchar(str[index_1], tty_default_color);
+
+    task->tty_buffer[task->tty_pos_start++] = tty_retchar('#', tty_default_color);
+    task->tty_buffer[task->tty_pos_start++] = tty_retchar(' ', tty_default_color);;
+    task->tty_pos_end = task->tty_pos_cur = task->tty_pos_start;
+    return;
+}
+
 void tty_backspace() {
     if(task_admin->tasks[0].tty_pos_cur > task_admin->tasks[0].tty_pos_start) {
         for(uint32_t i = task_admin->tasks[0].tty_pos_cur; i <= task_admin->tasks[0].tty_pos_end; i++)
@@ -148,7 +157,7 @@ void tty_enter() {
 
     if(com_len == 0) {
         printf("\n");
-        make_title(MACHINE_TITLE, &task_admin->tasks[0],0);
+        make_title(MACHINE_TITLE, &task_admin->tasks[0], 0);
     } else {
         char com_buffer[com_len];
 
@@ -174,12 +183,64 @@ static void command_line_parser(const char* command) {
         task_admin->tasks[0].tty_pos_cur = 0;
         task_admin->tasks[0].tty_pos_end = 0;
         task_admin->tasks[0].tty_pos_start = 0;
-    } else { // add command for shell
+    } else if(streq(command, "free"))
+        printf("\nMem Free:%uM\n", mem_admin.mem_free_all / 1024 / 1024);
+    else {
+        // add command for shell
         printf("\n%s: command not found\n", command);
     }
 
-    make_title(MACHINE_TITLE, &task_admin->tasks[0],0);
+    make_title(MACHINE_TITLE, &task_admin->tasks[0], 0);
     return;
+}
+
+void tty_new_terminal(uint32_t id) {
+    uint32_t show_id = task_admin->show_id;
+    //printf("id:%d", id);
+
+    if(id == show_id)
+        return;
+
+    bool on = false;
+
+    if(task_admin->visit[id] == false) {
+        task_init(&task_admin->tasks[id], id * 8, id, (uint32_t)kernel_alloc(sizeof(uint16_t) * VGAHEIGHT * VGAWIDTH),
+                  KERNEL_DATA_SEGMENT * 8, KERNEL_CODE_SEGMENT * 8, kernel_alloc(64 * (1 << 10)) + 64 * (1 << 10),
+                  (uint32_t)&task_begin, (uint32_t)kernel_page_directory);
+        set_gdt_struct(GDT + id, 103, (uint32_t)&task_admin->tasks[id].tss, TSS_AR);
+        _cli();
+
+        if(task_admin->ready_end == NULL) {
+            task_admin->ready_end = &task_admin->tasks[id];
+            task_admin->ready_head = &task_admin->tasks[id];
+        } else {
+            task_admin->ready_end->next_ready = &task_admin->tasks[id];
+            task_admin->ready_end = &task_admin->tasks[id];
+        }
+
+        on = true;
+
+    }
+
+    if(on == false)
+        _cli();
+
+    for(uint32_t index_1 = 0; index_1 < VGAHEIGHT * VGAWIDTH; index_1++) {
+        task_admin->tasks[show_id].tty_buffer[index_1] = task_admin->tasks[0].tty_buffer[index_1];
+        task_admin->tasks[0].tty_buffer[index_1] = task_admin->tasks[id].tty_buffer[index_1];
+    }
+
+    task_admin->tasks[show_id].tty_pos_cur = task_admin->tasks[0].tty_pos_cur;
+    task_admin->tasks[show_id].tty_pos_start = task_admin->tasks[0].tty_pos_start;
+    task_admin->tasks[show_id].tty_pos_end = task_admin->tasks[0].tty_pos_end;
+    task_admin->tasks[0].tty_pos_cur = task_admin->tasks[id].tty_pos_cur;
+    task_admin->tasks[0].tty_pos_start = task_admin->tasks[id].tty_pos_start;
+    task_admin->tasks[0].tty_pos_end = task_admin->tasks[id].tty_pos_end;
+    task_admin->show_id = id;
+    _sti();
+    update_cursor();
+    return;
+
 }
 
 // temporary printf function, need to be modified formally
@@ -287,7 +348,7 @@ static void update_cursor() {
     return;
 }
 
-static void tty_output_char_task(const char c, struct Task * task) {
+static void tty_output_char_task(const char c, struct Task* task) {
     if(c == '\n') {
         uint32_t cur_row;
         cur_row = task->tty_pos_cur / VGAWIDTH;
@@ -317,7 +378,7 @@ static void tty_output_char_task(const char c, struct Task * task) {
 }
 
 static void tty_output_char(const char c) {
-    uint32_t show_id = task_admin->show_screen_id;
+    uint32_t show_id = task_admin->show_id;
     uint32_t cur_id = task_admin->running->task_id;
 
     if(show_id == cur_id) {

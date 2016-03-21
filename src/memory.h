@@ -8,6 +8,14 @@
 #define PAGE_SIZE  4096
 #define PAGE_ENTRY_NUM  1024
 #define MEM_ITEM_MAX 1024
+struct Mem {
+    uint32_t head, end;
+};
+
+struct MemAdmin {
+    uint32_t mem_free_all, lists_len;
+    struct Mem mem_lists[MEM_ITEM_MAX];
+};
 void mem_init();
 void memset(void* addr,uint8_t value,uint32_t size);
 void memcpy(void* to,void* from,uint32_t size);

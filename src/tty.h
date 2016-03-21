@@ -27,7 +27,7 @@ enum Vgacolor {
     COLOR_WHITE = 15,
 };
 
-void tty_init();
+void tty_init(struct Task* task);
 void tty_right();
 void tty_left();
 void tty_enter();
@@ -39,4 +39,6 @@ void tty_end();
 void tty_delete();
 void make_title(const char* str, struct Task* task, uint8_t flag);
 void tty_buffer_init(struct Task* task);
+void tty_new_terminal(uint32_t id);
+
 #endif // TTY_H_INCLUDED

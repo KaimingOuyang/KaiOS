@@ -3,21 +3,12 @@
 #include <asmfunc.h>
 #include <tty.h>
 
-static uint32_t memtest();
-
-struct Mem {
-    uint32_t head, end;
-};
-
-struct MemAdmin {
-    uint32_t mem_free_all, lists_len;
-    struct Mem mem_lists[MEM_ITEM_MAX];
-};
-
 uint32_t mem_free_head;
 uint32_t mem_free_end;
 
 struct MemAdmin mem_admin;
+static uint32_t memtest();
+uint32_t** kernel_page_directory;
 
 void mem_init() {
     mem_free_head = MEM_TEST_START;
@@ -28,15 +19,15 @@ void mem_init() {
     mem_admin.mem_lists[0].head = mem_free_head;
     mem_admin.mem_lists[0].end = mem_free_end;
 
-    uint32_t** page_directory = (uint32_t**) kernel_alloc(PAGE_SIZE);
+    kernel_page_directory = (uint32_t**) kernel_alloc(PAGE_SIZE);
     for(uint32_t index_1=0;index_1<PAGE_ENTRY_NUM;index_1++){
-        page_directory[index_1] = (uint32_t*) kernel_alloc(PAGE_SIZE);
+        kernel_page_directory[index_1] = (uint32_t*) kernel_alloc(PAGE_SIZE);
         for(uint32_t index_2 = 0;index_2<PAGE_ENTRY_NUM;index_2++)
-            page_directory[index_1][index_2] = (index_1 * PAGE_ENTRY_NUM + index_2) * PAGE_SIZE | 3;
-        page_directory[index_1] = (uint32_t*)((uint32_t)page_directory[index_1] | 3);
+            kernel_page_directory[index_1][index_2] = (index_1 * PAGE_ENTRY_NUM + index_2) * PAGE_SIZE | 3;
+        kernel_page_directory[index_1] = (uint32_t*)((uint32_t)kernel_page_directory[index_1] | 3);
     }
 
-    _set_page_directory(page_directory);
+    _set_page_directory(kernel_page_directory);
     _enable_paging();
     return;
 }

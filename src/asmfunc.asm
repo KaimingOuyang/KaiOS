@@ -5,7 +5,7 @@ global _load_gdtr,_load_idtr,_load_cr0,_set_cr0,_set_page_directory,_enable_pagi
 global _out8,_in8
 global _asm_int21_keyboard,_asm_int20_timer
 global _sti,_cli,_hlt
-global _load_tr,_switch_task_b,_load_page_directory,_switch_task
+global _load_tr,_load_page_directory,_switch_task
 extern int21_keyboard,int20_timer
 
 _switch_task: ;void _switch_task(uint32_t eip,uint32_t cs);
@@ -68,13 +68,10 @@ _asm_int20_timer: ;void _asm_int20_timer();
     pushad
     push ds
     push es
-    push ss
-    mov ax,2001*8
-    mov ss,ax
+    mov ax,ss
     mov ds,ax
     mov es,ax
     call int20_timer
-    pop ss
     pop es
     pop ds
     popad

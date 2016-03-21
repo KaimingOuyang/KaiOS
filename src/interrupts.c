@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <fifo.h>
 #include <task.h>
+#include <stddef.h>
 
 #define PIC0_ICW1 0x0020
 #define PIC0_ICW2 0x0021
@@ -74,15 +75,16 @@ void pic_set_mask(uint8_t pic, uint16_t attr) {
     return;
 }
 
+
 void int20_timer() {
     _out8(PIC0_OCW2, 0x60);
 
-    if(task_admin->ready_len > 0) {
-        uint32_t ready_id = task_admin->ready[task_admin->ready_cur]->task_id;
-        struct Task* temp = task_admin->running;
-        task_admin->running = &task_admin->tasks[ready_id];
-        task_admin->ready[task_admin->ready_cur] = temp;
-        task_admin->ready_cur = (task_admin->ready_cur + 1) % task_admin->ready_len;
+
+    if(task_admin->ready_head != NULL) {
+        task_admin->ready_end->next_ready = task_admin->running;
+        task_admin->ready_end = task_admin->running;
+        task_admin->running = task_admin->ready_head;
+        task_admin->ready_head = task_admin->ready_head->next_ready;
         _switch_task(0, task_admin->running->selector);
     }
 
@@ -92,7 +94,7 @@ void int20_timer() {
 void int21_keyboard() {
     _out8(PIC0_OCW2, 0x61);
     uint8_t data = _in8(PORT_KEYBOARD);
-    uint32_t id = task_admin->show_screen_id;
+    uint32_t id = task_admin->show_id;
 
     if(!fifo_full(&task_admin->tasks[id].fifo))
         fifo_put(&task_admin->tasks[id].fifo, data);

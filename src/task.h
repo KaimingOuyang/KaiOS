@@ -18,18 +18,22 @@ struct Task {
     uint32_t tty_pos_cur,tty_pos_start,tty_pos_end;
     struct Tss32 tss;
     struct BufferPool fifo;
+    struct Task* next_ready;
+    struct Task* next_sleep;
 };
 
 struct TaskAdmin {
-    uint32_t task_len, show_screen_id;
-    uint32_t ready_cur, ready_len;
-    uint32_t sleep_len;
+    uint32_t show_id;
+    bool visit[MAX_TASK];
     struct Task tasks[MAX_TASK];
     struct Task* running;
-    struct Task* ready[MAX_TASK];
-    struct Task* sleep[MAX_TASK];
+    struct Task* ready_head;
+    struct Task* ready_end;
+    struct Task* sleep_head;
+    struct Task* sleep_end;
 };
-void task_init(struct Task* task,uint32_t selector,uint32_t id,
-               uint32_t data_sel,uint32_t code_sel,uint32_t esp,uint32_t eip, uint32_t page_dir);
+void task_init(struct Task* task, uint16_t selector, uint32_t id, uint16_t* buffer_addr,
+               uint32_t data_sel, uint32_t code_sel, uint32_t esp, uint32_t eip, uint32_t page_dir);
 void task_admin_init();
+void task_begin();
 #endif // TASK_H_INCLUDED

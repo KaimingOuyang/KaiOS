@@ -21,7 +21,6 @@ void _set_cr0(uint32_t cr0);
 void _set_page_directory(void* page_directory);
 void _enable_paging();
 
-void _switch_task_b();
 void _load_tr(uint16_t seg);
 uint32_t _load_page_directory();
 void _asm_int20_timer();

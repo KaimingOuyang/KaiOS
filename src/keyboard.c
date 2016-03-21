@@ -48,8 +48,6 @@ void keyboard_init() {
     scr_lock = false;
 }
 
-
-
 void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
     if(data == 0x0f)  // tab
         printf("    "); // 1 tab equals 4 spaces
@@ -68,7 +66,10 @@ void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
         set_led();
     } else if(data == 0x0E) // backspace
         tty_backspace();
-    else if(data == 0x1c) // enter
+    else if(0x3B <= data && data <= 0x44) { // F1-F10
+        if(alt_push == true)
+            tty_new_terminal(data - 0x3a);
+    } else if(data == 0x1c) // enter
         tty_enter();
     else if(data == 0x38) // left alt
         alt_push = true;

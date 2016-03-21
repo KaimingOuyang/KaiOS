@@ -29,7 +29,6 @@ struct IdtDescriptor{
     uint16_t offset_high;
 };
 
-void task_init();
 void gdt_init();
 void set_gdt_struct(struct GdtDescriptor* gdt_set,uint32_t limit,uint32_t base,uint16_t ar);
 
