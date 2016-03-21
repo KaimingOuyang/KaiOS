@@ -17,6 +17,7 @@ struct MemAdmin {
     struct Mem mem_lists[MEM_ITEM_MAX];
 };
 void mem_init();
+uint32_t free_mem();
 void memset(void* addr,uint8_t value,uint32_t size);
 void memcpy(void* to,void* from,uint32_t size);
 void kernel_free(void* addr, uint32_t size);

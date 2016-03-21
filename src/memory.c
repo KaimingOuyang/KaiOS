@@ -1,16 +1,15 @@
 #include <memory.h>
 #include <stddef.h>
 #include <asmfunc.h>
-#include <tty.h>
-
-uint32_t mem_free_head;
-uint32_t mem_free_end;
 
 struct MemAdmin mem_admin;
-static uint32_t memtest();
 uint32_t** kernel_page_directory;
 
+static uint32_t memtest();
+
 void mem_init() {
+    uint32_t mem_free_head;
+    uint32_t mem_free_end;
     mem_free_head = MEM_TEST_START;
     mem_free_end = memtest();
 
@@ -20,16 +19,23 @@ void mem_init() {
     mem_admin.mem_lists[0].end = mem_free_end;
 
     kernel_page_directory = (uint32_t**) kernel_alloc(PAGE_SIZE);
-    for(uint32_t index_1=0;index_1<PAGE_ENTRY_NUM;index_1++){
+
+    for(uint32_t index_1 = 0; index_1 < PAGE_ENTRY_NUM; index_1++) {
         kernel_page_directory[index_1] = (uint32_t*) kernel_alloc(PAGE_SIZE);
-        for(uint32_t index_2 = 0;index_2<PAGE_ENTRY_NUM;index_2++)
+
+        for(uint32_t index_2 = 0; index_2 < PAGE_ENTRY_NUM; index_2++)
             kernel_page_directory[index_1][index_2] = (index_1 * PAGE_ENTRY_NUM + index_2) * PAGE_SIZE | 3;
+
         kernel_page_directory[index_1] = (uint32_t*)((uint32_t)kernel_page_directory[index_1] | 3);
     }
 
     _set_page_directory(kernel_page_directory);
     _enable_paging();
     return;
+}
+
+uint32_t free_mem(){
+    return mem_admin.mem_free_all;
 }
 
 // physical address
@@ -48,6 +54,7 @@ void* kernel_alloc(uint32_t size_tmp) {
             if(cur->head == cur->end) {
                 for(uint32_t index_2 = index_1 + 1; index_2 < mem_admin.lists_len; index_2++)
                     mem_admin.mem_lists[index_2 - 1] = mem_admin.mem_lists[index_2];
+
                 mem_admin.lists_len--;
             }
         }

@@ -32,13 +32,12 @@ void tty_right();
 void tty_left();
 void tty_enter();
 void tty_backspace();
-void printf(const char* strtmp, ...); // whether it should be put into I/O module?
-void putchar(const char c);
+void update_cursor();
 void tty_home();
 void tty_end();
 void tty_delete();
 void make_title(const char* str, struct Task* task, uint8_t flag);
 void tty_buffer_init(struct Task* task);
 void tty_new_terminal(uint32_t id);
-
+void tty_output_char(const char c);
 #endif // TTY_H_INCLUDED

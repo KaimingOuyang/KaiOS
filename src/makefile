@@ -1,6 +1,7 @@
 # KaiOS makefile
 CC = i686-elf-gcc
-OBJS = fifo.o gdt_idt.o interrupts.o kernel.o keyboard.o memory.o string.o task.o tty.o boot.o asmfunc.o
+OBJS = fifo.o gdt_idt.o interrupts.o kernel.o keyboard.o memory.o \
+	   shell.o string.o task.o tty.o boot.o asmfunc.o io.o
 BINFLAGS = -T linker.ld -std=gnu99 -O2 -ffreestanding -nostdlib -lgcc
 OBJFLAGS = -c -ffreestanding -O2 -Wall -Wextra -std=gnu99 -I .
 NASM = nasm

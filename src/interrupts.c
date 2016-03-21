@@ -1,10 +1,10 @@
-#include <interrupts.h>
 #include <tty.h>
-#include <asmfunc.h>
-#include <stdbool.h>
 #include <fifo.h>
 #include <task.h>
 #include <stddef.h>
+#include <asmfunc.h>
+#include <stdbool.h>
+#include <interrupts.h>
 
 #define PIC0_ICW1 0x0020
 #define PIC0_ICW2 0x0021
@@ -78,8 +78,6 @@ void pic_set_mask(uint8_t pic, uint16_t attr) {
 
 void int20_timer() {
     _out8(PIC0_OCW2, 0x60);
-
-
     if(task_admin->ready_head != NULL) {
         task_admin->ready_end->next_ready = task_admin->running;
         task_admin->ready_end = task_admin->running;

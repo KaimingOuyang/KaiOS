@@ -141,9 +141,6 @@ void keyboard_parser(uint16_t data, struct BufferPool* common_buffer) {
         else
             putchar(shift_keymap[data]);
     }
-
-
-
     return;
 }
 
