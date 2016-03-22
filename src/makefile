@@ -9,7 +9,7 @@ NASMFLAGS = -felf32
 COMFILE = makefile linker.ld
 
 kaios.iso:kaios.bin
-	grub-mkrescue --modules="vga vbe" -o kaios.iso root
+	grub-mkrescue --modules="/boot/grub/i386-pc/vga_text.mod /boot/grub/i386-pc/vga.mod /boot/grub/i386-pc/gfxterm.mod" -o kaios.iso root
 
 kaios.bin: $(OBJS) $(COMFILE)
 	$(CC)  $(BINFLAGS) -o kaios.bin $(OBJS)

@@ -7,10 +7,10 @@
 void _cli();
 void _sti();
 void _hlt();
-void _load_gdtr(const uint32_t GLIMIT,struct GdtDescriptor* const GDT_ADDR);
-void _load_idtr(const uint32_t ILIMIT,struct IdtDescriptor* const IDT_ADDR);
+void _load_gdtr(const uint16_t GLIMIT,struct GdtDescriptor* const GDT_ADDR);
+void _load_idtr(const uint16_t ILIMIT,struct IdtDescriptor* const IDT_ADDR);
 void _tty_mode_switch();
-void _out8(const uint32_t port,const uint32_t data);
+void _out8(const uint16_t port,const uint8_t data);
 uint8_t _in8(const uint32_t port);
 
 void _asm_int21_keyboard();
