@@ -1,7 +1,5 @@
 #include <fifo.h>
 
-struct BufferPool common_buffer;
-
 void fifo_init(struct BufferPool* fifo) {
     fifo->front = 0;
     fifo->tail = 0;

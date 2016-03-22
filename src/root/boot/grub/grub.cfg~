@@ -3,6 +3,7 @@ menuentry "KaiOS-Generic-Kernel-1.0"{
 	insmod vga_text
 	insmod part_msdos
 	insmod gfxterm
+	gfxmode text
 	multiboot /boot/kaios.bin
 	vga=132*43
 }
