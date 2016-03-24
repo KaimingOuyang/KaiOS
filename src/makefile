@@ -8,12 +8,9 @@ NASM = nasm
 NASMFLAGS = -felf32
 COMFILE = makefile linker.ld
 
-kaios.iso:kaios.bin
-	grub-mkrescue --modules="/boot/grub/i386-pc/vga_text.mod /boot/grub/i386-pc/vga.mod /boot/grub/i386-pc/gfxterm.mod" -o kaios.iso root
 
-kaios.bin: $(OBJS) $(COMFILE)
-	$(CC)  $(BINFLAGS) -o kaios.bin $(OBJS)
-	@cp -f kaios.bin root/boot/
+milk.bin: $(OBJS) $(COMFILE)
+	$(CC)  $(BINFLAGS) -o milk.bin $(OBJS)
 
 %.o:%.c %.h $(COMFILE)
 	$(CC) $(OBJFLAGS) $*.c
@@ -24,16 +21,26 @@ kaios.bin: $(OBJS) $(COMFILE)
 boot.o:boot.asm $(COMFILE)
 	$(NASM) $(NASMFLAGS) -o $*.o $*.asm
 
+mbr.bin:mbr.asm $(COMFILE)
+	$(NASM) -fbin -o mbr.bin mbr.asm
+
+asmhead.bin:asmhead.asm $(COMFILE)
+	$(NASM) -fbin -o asmhead.bin asmhead.asm
+
+milk.img:mbr.bin asmhead.bin milk.bin $(COMFILE)
+	mk.mbr mbr.bin milk.img
+	mkfs.fat12 milk.img asmhead.bin milk.bin
+
 .PHONY:run clean
 
-run:kaios.iso
-	qemu-system-i386 -m 1G -vga vmware -cdrom kaios.iso
+run:milk.img
+	qemu-system-i386 -m 256M -vga vmware -fda milk.img
 
 clean:
 	@rm $(OBJS)
-	@rm kaios.bin
-	@rm root/boot/kaios.bin
-	@rm kaios.iso
+	@rm milk.bin
+	@rm asmhead.bin
+	@rm mbr.bin
 
 
 
