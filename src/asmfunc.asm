@@ -1,5 +1,3 @@
-
-
 section .text
 global _load_gdtr,_load_idtr,_load_cr0,_set_cr0,_set_page_directory,_enable_paging
 global _out8,_in8
