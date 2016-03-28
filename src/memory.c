@@ -23,7 +23,7 @@ void mem_init() {
     return;
 }
 
-uint32_t** get_kernel_pagedir(){
+uint32_t** get_kernel_pagedir() {
     uint32_t** kernel_pagedir = (uint32_t**) kernel_alloc(PAGE_SIZE);
 
     for(uint32_t index_1 = 0; index_1 < PAGE_ENTRY_NUM; index_1++) {
@@ -34,10 +34,11 @@ uint32_t** get_kernel_pagedir(){
 
         kernel_pagedir[index_1] = (uint32_t*)((uint32_t)kernel_pagedir[index_1] | 3);
     }
+
     return kernel_pagedir;
 }
 
-uint32_t free_mem(){
+uint32_t free_mem() {
     return mem_admin.mem_free_all;
 }
 
@@ -67,8 +68,27 @@ void* kernel_alloc(uint32_t size_tmp) {
 }
 
 
-void* malloc_for_app(uint32_t size_tmp,uint32_t addr){
+void malloc_for_app(uint32_t size_tmp, uint32_t addr) {
+    uint32_t index1 = addr / PAGE_SIZE / PAGE_ENTRY_NUM;
+    uint32_t index2 = addr / PAGE_SIZE % PAGE_ENTRY_NUM;
+    uint32_t** page_dir = (uint32_t**) _load_page_directory();
+    size_tmp += PAGE_SIZE;
+    uint32_t* page_table = (uint32_t*)((uint32_t)page_dir[index1] & 0xfffffffc);
 
+    for(uint32_t index_2 = index2; index_2 < PAGE_ENTRY_NUM && size_tmp > 0; index_2++) {
+        page_table[index_2] = (uint32_t) kernel_alloc(PAGE_SIZE) | 3;
+        size_tmp -= PAGE_SIZE;
+    }
+
+    for(uint32_t index_1 = index1 + 1; index_1 < PAGE_ENTRY_NUM && size_tmp > 0; index_1++) {
+        page_table = (uint32_t*)((uint32_t)page_dir[index_1] & 0xfffffffc);
+
+        for(uint32_t index_2 = 0; index_2 < PAGE_ENTRY_NUM && size_tmp > 0; index_2++) {
+            page_table[index_2] = (uint32_t) kernel_alloc(PAGE_SIZE) | 3;
+            size_tmp -= PAGE_SIZE;
+        }
+    }
+    return;
 }
 
 void kernel_free(void* paddr, uint32_t size_tmp) {
