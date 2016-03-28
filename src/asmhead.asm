@@ -41,13 +41,16 @@ reload_register:
     mov gs,ax
     mov ss,ax
 
+    mov eax,[milk+0x18]
+    mov [MILK_ADDR],eax
+
     mov eax,0x40000 ;256KB may be modified
     mov edi,0x100000 ;destination
     mov esi,milk;source
     add esi,0x1000
     call memcpy
 begin:
-    jmp dword 2*8:0x00101b30
+    jmp far [MILK_ADDR]
 
 memcpy:
     mov ebx,0
@@ -60,6 +63,10 @@ cpyloop:
     cmp ebx,eax
     jne cpyloop
     ret
+
+MILK_ADDR:
+    dd 0
+    dw 16
 
 alignb 8
 GDTR:

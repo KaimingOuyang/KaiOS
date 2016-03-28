@@ -62,8 +62,12 @@ void* kernel_alloc(uint32_t size_tmp) {
 
     return (void*) address;
 }
-
 /*
+void* malloc(uint32_t size_tmp){
+
+}
+
+
 API
 // virtual address
 void* user_alloc(uint32_t size, enum AllocType type, uint32_t task_num) {

@@ -1,10 +1,10 @@
 section .text
 global _load_gdtr,_load_idtr,_load_cr0,_set_cr0,_set_page_directory,_enable_paging
 global _out8,_in8
-global _asm_int21_keyboard,_asm_int20_timer
+global _asm_int21_keyboard,_asm_int20_timer,_asm_int26_io
 global _sti,_cli,_hlt
 global _load_tr,_load_page_directory,_switch_task
-extern int21_keyboard,int20_timer
+extern int21_keyboard,int20_timer,int26_io
 
 _switch_task: ;void _switch_task(uint32_t eip,uint32_t cs);
     jmp far [esp+4]
@@ -45,6 +45,22 @@ _in8: ;uint8_t _in8(const uint32 port);
     mov eax,0
     in al,dx
     ret
+
+_asm_int26_io: ;void _asm_int26_io();
+    pushad
+    push ds
+    push es
+    push ss
+    mov ax,2001*8
+    mov ss,ax
+    mov ds,ax
+    mov es,ax
+    call int26_io
+    pop ss
+    pop es
+    pop ds
+    popad
+    iretd
 
 _asm_int21_keyboard: ;void _asm_int21_keyboard();
     pushad

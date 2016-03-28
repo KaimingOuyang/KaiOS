@@ -1,3 +1,4 @@
+#include <io.h>
 #include <tty.h>
 #include <fifo.h>
 #include <task.h>
@@ -75,9 +76,11 @@ void pic_set_mask(uint8_t pic, uint16_t attr) {
     return;
 }
 
+extern uint32_t logo_time;
 
 void int20_timer() {
     _out8(PIC0_OCW2, 0x60);
+    logo_time++;
     if(task_admin->ready_head != NULL) {
         task_admin->ready_end->next_ready = task_admin->running;
         task_admin->ready_end = task_admin->running;
@@ -100,3 +103,9 @@ void int21_keyboard() {
     return;
 }
 
+extern bool floppy_irq;
+
+void int26_io(){
+    _out8(PIC0_OCW2, 0x66);
+    floppy_irq = true;
+}

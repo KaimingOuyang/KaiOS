@@ -22,3 +22,11 @@ bool streq(const char* str1, const char* str2) {
         }
     return true;
 }
+
+bool streqn(const char* str1, const char* str2, uint32_t n) {
+    for(uint32_t index_1=0;index_1<n;index_1++){
+        if(str1[index_1] != str2[index_1])
+            return false;
+    }
+    return true;
+}
