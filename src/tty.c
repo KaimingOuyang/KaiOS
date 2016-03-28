@@ -226,7 +226,7 @@ void tty_new_terminal(uint32_t id) {
     if(task_admin->visit[id] == false) {
         task_init(&task_admin->tasks[id], id * 8, id, (uint32_t)kernel_alloc(sizeof(uint16_t) * VGAHEIGHT * VGAWIDTH),
                   KERNEL_DATA_SEGMENT * 8, KERNEL_CODE_SEGMENT * 8, (uint32_t)kernel_alloc(64 * (1 << 10)) + 64 * (1 << 10),
-                  (uint32_t)&task_begin, (uint32_t)kernel_page_directory);
+                  (uint32_t)&task_begin, (uint32_t)get_kernel_pagedir());
 
         _cli();
 

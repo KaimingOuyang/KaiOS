@@ -73,8 +73,7 @@ void task_begin() {
 
     while(1) {
         if(fifo_empty(&task_admin->running->fifo)) {
-            //soft_task_switch();
-            _hlt();
+            soft_task_switch();
         } else {
             data = fifo_get(&task_admin->running->fifo);
 

@@ -17,21 +17,24 @@ void mem_init() {
     mem_admin.mem_free_all = mem_free_end - mem_free_head;
     mem_admin.mem_lists[0].head = mem_free_head;
     mem_admin.mem_lists[0].end = mem_free_end;
-
-    kernel_page_directory = (uint32_t**) kernel_alloc(PAGE_SIZE);
-
-    for(uint32_t index_1 = 0; index_1 < PAGE_ENTRY_NUM; index_1++) {
-        kernel_page_directory[index_1] = (uint32_t*) kernel_alloc(PAGE_SIZE);
-
-        for(uint32_t index_2 = 0; index_2 < PAGE_ENTRY_NUM; index_2++)
-            kernel_page_directory[index_1][index_2] = (index_1 * PAGE_ENTRY_NUM + index_2) * PAGE_SIZE | 3;
-
-        kernel_page_directory[index_1] = (uint32_t*)((uint32_t)kernel_page_directory[index_1] | 3);
-    }
-
+    kernel_page_directory = get_kernel_pagedir();
     _set_page_directory(kernel_page_directory);
     _enable_paging();
     return;
+}
+
+uint32_t** get_kernel_pagedir(){
+    uint32_t** kernel_pagedir = (uint32_t**) kernel_alloc(PAGE_SIZE);
+
+    for(uint32_t index_1 = 0; index_1 < PAGE_ENTRY_NUM; index_1++) {
+        kernel_pagedir[index_1] = (uint32_t*) kernel_alloc(PAGE_SIZE);
+
+        for(uint32_t index_2 = 0; index_2 < PAGE_ENTRY_NUM; index_2++)
+            kernel_pagedir[index_1][index_2] = (index_1 * PAGE_ENTRY_NUM + index_2) * PAGE_SIZE | 3;
+
+        kernel_pagedir[index_1] = (uint32_t*)((uint32_t)kernel_pagedir[index_1] | 3);
+    }
+    return kernel_pagedir;
 }
 
 uint32_t free_mem(){
@@ -62,19 +65,11 @@ void* kernel_alloc(uint32_t size_tmp) {
 
     return (void*) address;
 }
-/*
-void* malloc(uint32_t size_tmp){
+
+
+void* malloc_for_app(uint32_t size_tmp,uint32_t addr){
 
 }
-
-
-API
-// virtual address
-void* user_alloc(uint32_t size, enum AllocType type, uint32_t task_num) {
-
-}
-void free();
-*/
 
 void kernel_free(void* paddr, uint32_t size_tmp) {
     uint32_t addr = (uint32_t) paddr;
@@ -189,12 +184,7 @@ void memcpy(void* to, void* from, uint32_t size) {
 
     return;
 }
-/*
-void* kernel_malloc(uint32_t size){
-    uint32_t page_len = size / PAGE_SIZE + (size % PAGE_SIZE == 0 ? 0 : 1);
-    uint32_t
-}
-*/
+
 
 
 static uint32_t memtest() {
