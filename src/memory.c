@@ -67,7 +67,7 @@ void* kernel_alloc(uint32_t size_tmp) {
     return (void*) address;
 }
 
-
+/*
 void malloc_for_app(uint32_t size_tmp, uint32_t addr) {
     uint32_t index1 = addr / PAGE_SIZE / PAGE_ENTRY_NUM;
     uint32_t index2 = addr / PAGE_SIZE % PAGE_ENTRY_NUM;
@@ -90,7 +90,7 @@ void malloc_for_app(uint32_t size_tmp, uint32_t addr) {
     }
     return;
 }
-
+*/
 void kernel_free(void* paddr, uint32_t size_tmp) {
     uint32_t addr = (uint32_t) paddr;
     uint32_t index_1 = 0;

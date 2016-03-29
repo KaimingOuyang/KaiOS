@@ -329,6 +329,10 @@ void printf(const char* str, ...) {
             }
 
             i++;
+        } else if(str[i] == '\t') {
+            // escape character \t
+            for(uint32_t index_1 = 0; index_1 < 4; index_1++)
+                tty_output_char(' ');
         } else
             tty_output_char(str[i]);
     }

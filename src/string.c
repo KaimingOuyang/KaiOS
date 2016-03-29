@@ -6,7 +6,7 @@ int strlen(const char* str) {
         return 0;
 
     uint32_t cnt = 0;
-    while(str[cnt]) cnt++;
+    while(str[cnt] != '\0') cnt++;
     return cnt;
 }
 
