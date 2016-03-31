@@ -31,9 +31,9 @@ mbr.bin:mbr.asm $(COMFILE)
 asmhead.bin:asmhead.asm $(COMFILE)
 	$(NASM) -fbin -o asmhead.bin asmhead.asm
 
-milk.img:mbr.bin asmhead.bin milk.bin $(COMFILE)
+milk.img:mbr.bin asmhead.bin milk.bin logo.mk $(COMFILE)
 	mk.mbr mbr.bin milk.img
-	mkfs.fat12 milk.img asmhead.bin milk.bin
+	mkfs.fat12 milk.img asmhead.bin milk.bin logo.mk
 
 ## application
 app_start.o:app_start.asm $(COMFILE)
@@ -42,11 +42,12 @@ app_start.o:app_start.asm $(COMFILE)
 asmapi.o:asmapi.asm asmapi.h $(COMFILE)
 	$(NASM) $(NASMFLAGS) -o asmapi.o asmapi.asm
 
-api_logo.o:api_logo.c $(COMFILE)
-	$(CC) -c api_logo.c
+app_logo.o:app_logo.c $(COMFILE)
+	$(CC) -std=gnu99 -I . -c app_logo.c
 
-logo.mk:api_logo.o asmapi.o $(COMFILE)
-	$(CC) -T app_linker.ld -o logo.mk api_logo.o asmapi.o app_start.o
+logo.mk:app_logo.o asmapi.o app_start.o $(COMFILE)
+	$(CC) -O2 -ffreestanding -nostdlib -lgcc -T app_linker.ld -o \
+	logo.mk app_logo.o asmapi.o app_start.o
 
 .PHONY:run clean
 
@@ -58,6 +59,7 @@ clean:
 	@rm milk.bin
 	@rm asmhead.bin
 	@rm mbr.bin
+	@rm logo.mk
 
 
 

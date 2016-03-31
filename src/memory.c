@@ -45,7 +45,7 @@ uint32_t free_mem() {
 // physical address
 void* kernel_alloc(uint32_t size_tmp) {
     uint32_t address = 0;
-    uint32_t size = size_tmp / PAGE_SIZE * PAGE_SIZE + (size_tmp % PAGE_SIZE == 0 ? 0 : PAGE_SIZE);
+    uint32_t size = size_tmp / PAGE_SIZE * PAGE_SIZE + ((size_tmp % PAGE_SIZE == 0) ? 0 : PAGE_SIZE);
 
     for(uint32_t index_1 = 0; index_1 < mem_admin.lists_len; index_1++) {
         struct Mem* cur = &mem_admin.mem_lists[index_1];
@@ -93,14 +93,14 @@ void malloc_for_app(uint32_t size_tmp, uint32_t addr) {
 */
 void kernel_free(void* paddr, uint32_t size_tmp) {
     uint32_t addr = (uint32_t) paddr;
-    uint32_t index_1 = 0;
+    int32_t index_1 = 0;
     uint32_t size = size_tmp / PAGE_SIZE * PAGE_SIZE + (size_tmp % PAGE_SIZE == 0 ? 0 : PAGE_SIZE);
 
     for(index_1 = 0; index_1 < mem_admin.lists_len; index_1++) {
         struct Mem* cur = &mem_admin.mem_lists[index_1];
 
         if(addr < cur->head) {
-            for(uint32_t index_2 = mem_admin.lists_len - 1; index_2 >= index_1; index_2--)
+            for(int32_t index_2 = mem_admin.lists_len - 1; index_2 >= index_1; index_2--)
                 mem_admin.mem_lists[index_2 + 1] = mem_admin.mem_lists[index_2];
 
             break;
@@ -132,6 +132,7 @@ void kernel_free(void* paddr, uint32_t size_tmp) {
 
     mem_admin.mem_free_all += size;
     mem_admin.lists_len = new_len;
+
     return;
 }
 

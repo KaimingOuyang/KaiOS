@@ -3,18 +3,69 @@ global _load_gdtr,_load_idtr,_load_cr0,_set_cr0,_set_page_directory,_enable_pagi
 global _out8,_in8
 global _asm_int21_keyboard,_asm_int20_timer,_asm_int26_io,_asm_int40_api
 global _sti,_cli,_hlt
-global _load_tr,_load_page_directory,_switch_task,
+global _load_tr,_load_page_directory,_switch_task,_far_jmp,_start_app,_end_app
 extern int21_keyboard,int20_timer,int26_io,int40_api
 
+_start_app:		; void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
+
+		mov	eax,[esp+4]
+		mov	ecx,[esp+8]
+		mov	edx,[esp+12]
+		mov	ebx,[esp+16]
+		mov	ebp,[esp+20]
+		;mov	[ebp  ],esp ; system esp
+		;mov	[ebp+4],ss ; system ss
+		cli
+        mov	es,bx
+		mov	ds,bx
+		mov	fs,bx
+		mov	gs,bx
+        sti
+        ;or		ecx,3
+		;or		ebx,3
+
+		;push edx ;app esp
+		;push ebx ;app ss
+        push ecx
+        push eax
+
+        retf
+_end_app:
+        cli
+        mov ax,2001*8
+        mov ds,ax
+        mov es,ax
+        mov fs,ax
+        mov gs,ax
+        ;mov ss,ax
+        sti
+
+        ret
+        ;popad
+		;jmp $
+		;ret
 
 _asm_int40_api:
     sti
+    cmp ebx,3
+    je once
+    push ds
+    push es
     pushad
+once:
+    pushad
+    mov ax,2001*8
+    mov ds,ax
+    mov es,ax
     call int40_api
+    add esp,32
     popad
+    pop es
+    pop ds
     iretd
 
 _switch_task: ;void _switch_task(uint32_t eip,uint32_t cs);
+_far_jmp:
     jmp far [esp+4]
     ret
 
@@ -56,15 +107,12 @@ _in8: ;uint8_t _in8(const uint32 port);
 
 _asm_int26_io: ;void _asm_int26_io();
     pushad
-    push ss
     push ds
     push es
-    mov ax,2001*8
-    mov ss,ax
+    mov ax,ss
     mov ds,ax
     mov es,ax
     call int26_io
-    pop ss
     pop es
     pop ds
     popad
@@ -74,13 +122,10 @@ _asm_int21_keyboard: ;void _asm_int21_keyboard();
     pushad
     push ds
     push es
-    push ss
-    mov ax,2001*8
-    mov ss,ax
+    mov ax,ss
     mov ds,ax
     mov es,ax
     call int21_keyboard
-    pop ss
     pop es
     pop ds
     popad

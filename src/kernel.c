@@ -7,7 +7,7 @@ void milk_main() {
     pic_init();
     keyboard_init();
     pic_set_mask(PIC0, 0xb8);
-    //show_logo();
+    show_logo();
     task_admin_init();
     io_init();
     task_begin();

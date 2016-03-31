@@ -6,7 +6,7 @@
 #define VGAHEAD 0xB8000
 #define VGAWIDTH 80
 #define VGAHEIGHT 25
-#define MACHINE_TITLE "root@KaiOS:/"
+#define MACHINE_TITLE "root@Milk:/"
 
 enum Vgacolor {
     COLOR_BLACK = 0,

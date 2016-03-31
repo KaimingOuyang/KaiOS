@@ -47,7 +47,8 @@ struct ELFProHead{
 };
 
 extern struct TaskAdmin* task_admin;
-
+uint32_t code_addr;
+uint32_t data_addr;
 void command_line_parser(const char* command) {
     if(streq(command, "clear")) {
         tty_init(&task_admin->tasks[0]);
@@ -103,24 +104,37 @@ void command_line_parser(const char* command) {
                     uint32_t app_addr = DATA_ADDR + 512 * en->hclus;
                     struct ELFHead* elf_head = floppy_read(app_addr,en->fsize / 512 + 1);
                     struct ELFProHead* elf_phead = elf_head + 1;
-                    uint32_t code_addr = (uint32_t) kernel_alloc(4*1024*1024);
-                    uint32_t data_addr = (uint32_t) kernel_alloc(4*1024*1024);
-                    set_gdt_struct(1002,4*1024*1024,code_addr,OS_GDT_CODE_AR + 0x60);
-                    set_gdt_struct(2002,4*1024*1024,data_addr,OS_GDT_DATA_AR + 0x60);
-                    uint8_t* code_si = (uint8_t*) elf_phead->p_offset + 0x1000;
-                    uint8_t* code_de = (uint8_t*) (code_addr + elf_head->e_entry);
-                    for(uint32_t index_1=0;index_1<elf_phead->p_filesz;index_1++)
-                        *code_de = *code_si;
-                    elf_phead++;
-                    uint32_t* data_si = (uint32_t*) (elf_phead->p_offset + 0x1000);
-                    uint32_t* data_de = (uint32_t*) (data_addr + elf_phead->p_vaddr);
-                    for(uint32_t index_1=0;index_1<elf_phead->p_filesz;index_1++)
-                        *data_de = *data_si;
+                    uint8_t* p = (uint8_t) elf_head;
 
-                } else {
+                    code_addr = (uint32_t) kernel_alloc(4*1024*1024);
+                    data_addr = (uint32_t) kernel_alloc(4*1024*1024);
+                    //set_gdt_struct(1002,4*1024*1024,code_addr,OS_GDT_CODE_AR + 0x60);
+                    set_gdt_struct(1002,4*1024*1024-1,code_addr,OS_GDT_CODE_AR);
+                    //set_gdt_struct(2002,4*1024*1024,data_addr,OS_GDT_DATA_AR + 0x60);
+                    set_gdt_struct(2002,4*1024*1024-1,data_addr,OS_GDT_DATA_AR);
+                    uint8_t* code_si = (uint8_t*) (elf_phead->p_offset + 0x1000);
+                    uint8_t* code_de = (uint8_t*) code_addr + elf_phead->p_vaddr;
+
+                    for(uint32_t index_1=0;index_1<elf_phead->p_filesz;index_1++)
+                        code_de[index_1] = code_si[index_1];
+
+                    elf_phead++;
+                    uint8_t* data_si = (uint8_t*) (elf_phead->p_offset + 0x1000);
+                    uint8_t* data_de = (uint8_t*) (data_addr + elf_phead->p_vaddr);
+                    for(uint32_t index_1=0;index_1<elf_phead->p_filesz;index_1++)
+                        data_de[index_1] = data_si[index_1];
+
+                    printf("\n");
+
+                    _start_app(elf_head->e_entry,1002*8,0x1000,
+                              2002*8,&task_admin->running->tss.esp0);
+                    kernel_free(code_addr,4*1024*1024);
+                    kernel_free(data_addr,4*1024*1024);
+
+                } else
                     printf("\n%s:File type error.", name);
-                    break;
-                }
+
+                break;
             }
             en++;
         }

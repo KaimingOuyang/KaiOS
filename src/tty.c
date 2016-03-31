@@ -6,35 +6,6 @@
 #include <stddef.h>
 #include <memory.h>
 #include <shell.h>
-/*
-struct PMInfoBlock{
-    uint8_t signature[4];
-    uint16_t entry_point;
-    uint16_t init_point;
-    uint16_t BIOS_data_sel;
-    uint16_t sel_A0000;
-    uint16_t sel_B0000;
-    uint16_t sel_B8000;
-    uint16_t code_sel;
-    uint8_t in_pm_mode;
-    uint8_t check_sum;
-};
-*/
-/*
-struct PMInfoBlock* head;
-
-void adjust_resolution(uint32_t column, uint32_t row){
-    const uint32_t* BIOS_CODE = (uint32_t*) 0x400000;
-    load_BIOS_code(BIOS_CODE);
-    head = (PMInfoBlock*) scan_BIOS_head();
-    head->BIOS_data_sel = 2003 * 8;
-    head->sel_A0000 = 2004 * 8;
-    head->sel_B0000 = 2005 * 8;
-    head->sel_B8000 = 2006 * 8;
-    head->code_sel = 2002 * 8;
-
-}
-*/
 
 
 /*
@@ -92,7 +63,7 @@ void show_logo() {
             vram[index_1] = tty_retchar(0x07,tty_default_color);
     }
     while(logo_time != 200);
-    //while(1);
+
     return;
 }
 
@@ -117,7 +88,7 @@ void tty_buffer_init(struct Task* task) {
 
 void make_title(const char* str, struct Task* task, uint8_t flag) {
     uint32_t len = strlen(str);
-
+    task->tty_pos_start = task->tty_pos_end = task->tty_pos_cur;
     if(flag == 1)
         task->tty_pos_start -= 2;
 

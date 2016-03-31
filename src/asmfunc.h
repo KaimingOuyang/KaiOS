@@ -26,6 +26,8 @@ void _enable_paging();
 
 void _load_tr(uint16_t seg);
 uint32_t _load_page_directory();
-
+void _far_jmp(uint32_t eip,uint32_t cs);
 void _switch_task(uint32_t eip,uint32_t cs);
+void _end_app();
+void _start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 #endif // ASMFUNC_H_INCLUDED
