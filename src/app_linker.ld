@@ -1,7 +1,7 @@
 ENTRY(_start)
 
 SECTIONS{
-	. = 1M;
+	. = 0M;
 	.text BLOCK(4K) : ALIGN(4K){
 		*(.text)
 	}
@@ -17,6 +17,5 @@ SECTIONS{
 	.bss BLOCK(4K) : ALIGN(4K){
 		*(COMMON)
 		*(.bss)
-		*(.bootstrap_stack)
 	}
 }

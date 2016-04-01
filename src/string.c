@@ -6,7 +6,7 @@ int strlen(const char* str) {
         return 0;
 
     uint32_t cnt = 0;
-    while(str[cnt]) cnt++;
+    while(str[cnt] != '\0') cnt++;
     return cnt;
 }
 
@@ -20,5 +20,13 @@ bool streq(const char* str1, const char* str2) {
             if(str1[i] != str2[i])
                 return false;
         }
+    return true;
+}
+
+bool streqn(const char* str1, const char* str2, uint32_t n) {
+    for(uint32_t index_1=0;index_1<n;index_1++){
+        if(str1[index_1] != str2[index_1])
+            return false;
+    }
     return true;
 }

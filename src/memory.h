@@ -18,6 +18,8 @@ struct MemAdmin {
 };
 void mem_init();
 uint32_t free_mem();
+uint32_t** get_kernel_pagedir();
+void malloc_for_app(uint32_t size_tmp, uint32_t addr);
 void memset(void* addr,uint8_t value,uint32_t size);
 void memcpy(void* to,void* from,uint32_t size);
 void kernel_free(void* addr, uint32_t size);

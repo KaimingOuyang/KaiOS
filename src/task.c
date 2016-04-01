@@ -11,6 +11,8 @@ struct TaskAdmin* task_admin;
 extern struct GdtDescriptor* GDT;
 extern uint32_t** kernel_page_directory;
 
+static void soft_task_switch();
+
 void task_admin_init() {
 
     task_admin = (struct TaskAdmin*) kernel_alloc(sizeof(struct TaskAdmin));
@@ -28,6 +30,7 @@ void task_admin_init() {
     task_admin->tasks[0].tty_buffer = (uint16_t*) VGAHEAD;
     tty_init(&task_admin->tasks[0]);
     make_title(MACHINE_TITLE, &task_admin->tasks[0], 0);
+    update_cursor();
     return;
 }
 
@@ -70,7 +73,7 @@ void task_begin() {
 
     while(1) {
         if(fifo_empty(&task_admin->running->fifo)) {
-            _hlt();
+            soft_task_switch();
         } else {
             data = fifo_get(&task_admin->running->fifo);
 
@@ -78,4 +81,17 @@ void task_begin() {
                 keyboard_parser(data, &task_admin->running->fifo);
         }
     }
+}
+
+static void soft_task_switch(){
+    _cli();
+    if(task_admin->ready_head != NULL) {
+        task_admin->ready_end->next_ready = task_admin->running;
+        task_admin->ready_end = task_admin->running;
+        task_admin->running = task_admin->ready_head;
+        task_admin->ready_head = task_admin->ready_head->next_ready;
+        _switch_task(0, task_admin->running->selector);
+    }
+    _sti();
+    return;
 }

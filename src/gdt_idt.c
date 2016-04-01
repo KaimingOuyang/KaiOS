@@ -49,6 +49,9 @@ void idt_init() {
     memset(IDT, 0, 1 << 11); // if I have to use sprintf, I must rewrite this line as for()
     set_idt_struct(0x20, (uint32_t)_asm_int20_timer, KERNEL_CODE_SEGMENT * 8, IDT_AR); // timer
     set_idt_struct(0x21, (uint32_t)_asm_int21_keyboard, KERNEL_CODE_SEGMENT * 8, IDT_AR); // keyboard
+    set_idt_struct(0x26, (uint32_t)_asm_int26_io, KERNEL_CODE_SEGMENT * 8, IDT_AR); // io
+    //set_idt_struct(0x40, (uint32_t)_asm_int40_api, KERNEL_CODE_SEGMENT * 8, IDT_AR); // api
+    set_idt_struct(0x40, (uint32_t)_asm_int40_api, KERNEL_CODE_SEGMENT * 8, IDT_AR + 0x60); // api
     _load_idtr(IDT_LIMIT, IDT);
     return;
 }

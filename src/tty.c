@@ -6,35 +6,6 @@
 #include <stddef.h>
 #include <memory.h>
 #include <shell.h>
-/*
-struct PMInfoBlock{
-    uint8_t signature[4];
-    uint16_t entry_point;
-    uint16_t init_point;
-    uint16_t BIOS_data_sel;
-    uint16_t sel_A0000;
-    uint16_t sel_B0000;
-    uint16_t sel_B8000;
-    uint16_t code_sel;
-    uint8_t in_pm_mode;
-    uint8_t check_sum;
-};
-*/
-/*
-struct PMInfoBlock* head;
-
-void adjust_resolution(uint32_t column, uint32_t row){
-    const uint32_t* BIOS_CODE = (uint32_t*) 0x400000;
-    load_BIOS_code(BIOS_CODE);
-    head = (PMInfoBlock*) scan_BIOS_head();
-    head->BIOS_data_sel = 2003 * 8;
-    head->sel_A0000 = 2004 * 8;
-    head->sel_B0000 = 2005 * 8;
-    head->sel_B8000 = 2006 * 8;
-    head->code_sel = 2002 * 8;
-
-}
-*/
 
 
 /*
@@ -52,11 +23,55 @@ static inline uint8_t make_color(enum Vgacolor fg, enum Vgacolor bg);
 static inline uint16_t tty_retchar(char c, uint8_t color);
 static void tty_output_char_task(const char c, struct Task* task);
 
+static char logo[] =
+    "................................................................................"
+    "................................................................................"
+    "................................................................................"
+    "................................................................................"
+    "..........*****.....*****...**********...******........******..*****............"
+    "............***.....***.........**.........**............**.....**.............."
+    "............***.....***.........**.........**............**.....*..............."
+    "............***.....***.........**.........**............**....*................"
+    "............*.**...*.**.........**.........**............**...**................"
+    "............*.**...*.**.........**.........**............**..**................."
+    "............*.**...*.**.........**.........**............**..*.................."
+    "............*.**...*.**.........**.........**............**.***................."
+    "............*.***.*..**.........**.........**............***.**................."
+    "............*..**.*..**.........**.........**............**..***................"
+    "............*..**.*..**.........**.........**............**...**................"
+    "............*..****..**.........**.........**............**....**..............."
+    "............*..***...**.........**.........**............**....***.............."
+    "............*...**...**.........**.........**........*...**.....**.............."
+    "............*...**...**.........**.........**........*...**.....***............."
+    "............*...**...**.........**.........**......**....**......**............."
+    "..........*****.*..******...**********...************..******...*****..........."
+    "................................................................................"
+    "................................................................................"
+    "................................................................................"
+    "................................................................................";
+
+volatile uint32_t logo_time;
+
+void show_logo() {
+    logo_time = 0;
+    uint16_t* vram = (uint16_t*) VGAHEAD;
+    tty_default_color = make_color(COLOR_LIGHT_GREY,COLOR_BLACK);
+    for(uint32_t index_1 = 0; index_1 < 80 * 25; index_1++) {
+        if(logo[index_1] == '.')
+            vram[index_1] = tty_retchar(' ',tty_default_color);
+        else
+            vram[index_1] = tty_retchar(0x07,tty_default_color);
+    }
+    while(logo_time != 200);
+
+    return;
+}
+
 void tty_init(struct Task* task) {
     task->tty_pos_cur = 0;
     task->tty_pos_end = 0;
     task->tty_pos_start = 0;
-    tty_default_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
+    tty_default_color = make_color(COLOR_LIGHT_GREY,COLOR_BLACK); // should be annotated after whole finished
     tty_buffer_init(task);
     return;
 }
@@ -67,12 +82,13 @@ void tty_buffer_init(struct Task* task) {
             uint32_t pos = y * VGAWIDTH + x;
             task->tty_buffer[pos] = tty_retchar(' ', tty_default_color);
         }
+
     return;
 }
 
 void make_title(const char* str, struct Task* task, uint8_t flag) {
     uint32_t len = strlen(str);
-
+    task->tty_pos_start = task->tty_pos_end = task->tty_pos_cur;
     if(flag == 1)
         task->tty_pos_start -= 2;
 
@@ -181,9 +197,10 @@ void tty_new_terminal(uint32_t id) {
     if(task_admin->visit[id] == false) {
         task_init(&task_admin->tasks[id], id * 8, id, (uint32_t)kernel_alloc(sizeof(uint16_t) * VGAHEIGHT * VGAWIDTH),
                   KERNEL_DATA_SEGMENT * 8, KERNEL_CODE_SEGMENT * 8, (uint32_t)kernel_alloc(64 * (1 << 10)) + 64 * (1 << 10),
-                  (uint32_t)&task_begin, (uint32_t)kernel_page_directory);
+                  (uint32_t)&task_begin, (uint32_t)get_kernel_pagedir());
 
         _cli();
+
         if(task_admin->ready_end == NULL) {
             task_admin->ready_end = &task_admin->tasks[id];
             task_admin->ready_head = &task_admin->tasks[id];

@@ -3,6 +3,7 @@
 #include <tty.h>
 #include <asmfunc.h>
 #include <stdbool.h>
+#include <io.h>
 #define KEYSTAT 0x64
 #define KEYDATA 0x60
 #define KEYBOARD_NOT_READY 0x02

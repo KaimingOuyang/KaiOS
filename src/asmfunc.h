@@ -13,7 +13,10 @@ void _tty_mode_switch();
 void _out8(const uint16_t port,const uint8_t data);
 uint8_t _in8(const uint32_t port);
 
+void _asm_int20_timer();
 void _asm_int21_keyboard();
+void _asm_int26_io();
+void _asm_int40_api();
 
 uint32_t _load_cr0();
 void _set_cr0(uint32_t cr0);
@@ -23,6 +26,8 @@ void _enable_paging();
 
 void _load_tr(uint16_t seg);
 uint32_t _load_page_directory();
-void _asm_int20_timer();
+void _far_jmp(uint32_t eip,uint32_t cs);
 void _switch_task(uint32_t eip,uint32_t cs);
+void _end_app();
+void _start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 #endif // ASMFUNC_H_INCLUDED

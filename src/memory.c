@@ -17,31 +17,35 @@ void mem_init() {
     mem_admin.mem_free_all = mem_free_end - mem_free_head;
     mem_admin.mem_lists[0].head = mem_free_head;
     mem_admin.mem_lists[0].end = mem_free_end;
-
-    kernel_page_directory = (uint32_t**) kernel_alloc(PAGE_SIZE);
-
-    for(uint32_t index_1 = 0; index_1 < PAGE_ENTRY_NUM; index_1++) {
-        kernel_page_directory[index_1] = (uint32_t*) kernel_alloc(PAGE_SIZE);
-
-        for(uint32_t index_2 = 0; index_2 < PAGE_ENTRY_NUM; index_2++)
-            kernel_page_directory[index_1][index_2] = (index_1 * PAGE_ENTRY_NUM + index_2) * PAGE_SIZE | 3;
-
-        kernel_page_directory[index_1] = (uint32_t*)((uint32_t)kernel_page_directory[index_1] | 3);
-    }
-
+    kernel_page_directory = get_kernel_pagedir();
     _set_page_directory(kernel_page_directory);
     _enable_paging();
     return;
 }
 
-uint32_t free_mem(){
+uint32_t** get_kernel_pagedir() {
+    uint32_t** kernel_pagedir = (uint32_t**) kernel_alloc(PAGE_SIZE);
+
+    for(uint32_t index_1 = 0; index_1 < PAGE_ENTRY_NUM; index_1++) {
+        kernel_pagedir[index_1] = (uint32_t*) kernel_alloc(PAGE_SIZE);
+
+        for(uint32_t index_2 = 0; index_2 < PAGE_ENTRY_NUM; index_2++)
+            kernel_pagedir[index_1][index_2] = (index_1 * PAGE_ENTRY_NUM + index_2) * PAGE_SIZE | 3;
+
+        kernel_pagedir[index_1] = (uint32_t*)((uint32_t)kernel_pagedir[index_1] | 3);
+    }
+
+    return kernel_pagedir;
+}
+
+uint32_t free_mem() {
     return mem_admin.mem_free_all;
 }
 
 // physical address
 void* kernel_alloc(uint32_t size_tmp) {
     uint32_t address = 0;
-    uint32_t size = size_tmp / PAGE_SIZE * PAGE_SIZE + (size_tmp % PAGE_SIZE == 0 ? 0 : PAGE_SIZE);
+    uint32_t size = size_tmp / PAGE_SIZE * PAGE_SIZE + ((size_tmp % PAGE_SIZE == 0) ? 0 : PAGE_SIZE);
 
     for(uint32_t index_1 = 0; index_1 < mem_admin.lists_len; index_1++) {
         struct Mem* cur = &mem_admin.mem_lists[index_1];
@@ -64,24 +68,39 @@ void* kernel_alloc(uint32_t size_tmp) {
 }
 
 /*
-API
-// virtual address
-void* user_alloc(uint32_t size, enum AllocType type, uint32_t task_num) {
+void malloc_for_app(uint32_t size_tmp, uint32_t addr) {
+    uint32_t index1 = addr / PAGE_SIZE / PAGE_ENTRY_NUM;
+    uint32_t index2 = addr / PAGE_SIZE % PAGE_ENTRY_NUM;
+    uint32_t** page_dir = (uint32_t**) _load_page_directory();
+    size_tmp += PAGE_SIZE;
+    uint32_t* page_table = (uint32_t*)((uint32_t)page_dir[index1] & 0xfffffffc);
 
+    for(uint32_t index_2 = index2; index_2 < PAGE_ENTRY_NUM && size_tmp > 0; index_2++) {
+        page_table[index_2] = (uint32_t) kernel_alloc(PAGE_SIZE) | 3;
+        size_tmp -= PAGE_SIZE;
+    }
+
+    for(uint32_t index_1 = index1 + 1; index_1 < PAGE_ENTRY_NUM && size_tmp > 0; index_1++) {
+        page_table = (uint32_t*)((uint32_t)page_dir[index_1] & 0xfffffffc);
+
+        for(uint32_t index_2 = 0; index_2 < PAGE_ENTRY_NUM && size_tmp > 0; index_2++) {
+            page_table[index_2] = (uint32_t) kernel_alloc(PAGE_SIZE) | 3;
+            size_tmp -= PAGE_SIZE;
+        }
+    }
+    return;
 }
-void free();
 */
-
 void kernel_free(void* paddr, uint32_t size_tmp) {
     uint32_t addr = (uint32_t) paddr;
-    uint32_t index_1 = 0;
+    int32_t index_1 = 0;
     uint32_t size = size_tmp / PAGE_SIZE * PAGE_SIZE + (size_tmp % PAGE_SIZE == 0 ? 0 : PAGE_SIZE);
 
     for(index_1 = 0; index_1 < mem_admin.lists_len; index_1++) {
         struct Mem* cur = &mem_admin.mem_lists[index_1];
 
         if(addr < cur->head) {
-            for(uint32_t index_2 = mem_admin.lists_len - 1; index_2 >= index_1; index_2--)
+            for(int32_t index_2 = mem_admin.lists_len - 1; index_2 >= index_1; index_2--)
                 mem_admin.mem_lists[index_2 + 1] = mem_admin.mem_lists[index_2];
 
             break;
@@ -113,6 +132,7 @@ void kernel_free(void* paddr, uint32_t size_tmp) {
 
     mem_admin.mem_free_all += size;
     mem_admin.lists_len = new_len;
+
     return;
 }
 
@@ -185,12 +205,7 @@ void memcpy(void* to, void* from, uint32_t size) {
 
     return;
 }
-/*
-void* kernel_malloc(uint32_t size){
-    uint32_t page_len = size / PAGE_SIZE + (size % PAGE_SIZE == 0 ? 0 : 1);
-    uint32_t
-}
-*/
+
 
 
 static uint32_t memtest() {

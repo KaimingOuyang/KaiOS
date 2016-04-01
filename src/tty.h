@@ -6,7 +6,7 @@
 #define VGAHEAD 0xB8000
 #define VGAWIDTH 80
 #define VGAHEIGHT 25
-#define MACHINE_TITLE "root@KaiOS:/"
+#define MACHINE_TITLE "root@Milk:/"
 
 enum Vgacolor {
     COLOR_BLACK = 0,
@@ -36,6 +36,7 @@ void update_cursor();
 void tty_home();
 void tty_end();
 void tty_delete();
+void show_logo();
 void make_title(const char* str, struct Task* task, uint8_t flag);
 void tty_buffer_init(struct Task* task);
 void tty_new_terminal(uint32_t id);
