@@ -3,7 +3,7 @@
 MilkOS是基于i686处理器架构开发的32位操作系统，目前的功能包含段页式寻址，任务并发，多终端切换，软盘I/O，ELF格式文件加载器，
 简易shell等，文件系统为FAT12。目前shell提供了浏览软盘文件，运行应用程序，切换终端，清屏，查看内存的功能，另外的功能将在后
 续进行开发。该版本的操作系统重点在于内核开发，去掉不必要的GUI开发，因为虚拟机虚拟显卡的原因，目前暂不支持132x43的文本模式
-，本系统用的显示模式为80x25文本模式。Github网址：https://github.com/KaimingOuyang/KaiOS.git
+，本系统用的显示模式为80x25文本模式。Github网址:https://github.com/KaimingOuyang/KaiOS.git
 
 
 系统运行方法：
@@ -13,6 +13,7 @@ MilkOS是基于i686处理器架构开发的32位操作系统，目前的功能�
 2.安装好qemu后，可以在我的Github网址中下载源码和软盘镜像，软盘镜像名称为milk.img
 
 3.运行操作系统，命令为qemu-system-i386 -m 256M -vga vmware -fda milk.img
+
 
 
 shell功能使用介绍：
